@@ -99,8 +99,11 @@
       "web": "Веб-віджет",
       "shopify": "Shopify"
     },
-    "active": "підключено",
-    "connect": "доступно",
+    "connected": "підключено",
+    "available": "доступно",
+    "connectBtn": "Підключити",
+    "disconnect": "Відключити",
+    "builtIn": "Вбудований — працює через REST API, налаштування не потрібне",
     "playground": "API Пісочниця",
     "messagePlaceholder": "Введіть повідомлення клієнта для тесту...",
     "requestExample": "Запит",

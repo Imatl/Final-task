@@ -8,7 +8,7 @@ import (
 func TestProcessMessageNoProvider(t *testing.T) {
 	resetProviders()
 
-	_, err := ProcessMessage(context.Background(), "ticket-1", "hello")
+	_, err := ProcessMessage(context.Background(), "ticket-1", "hello", "")
 	if err == nil {
 		t.Error("ProcessMessage should error when no provider configured")
 	}

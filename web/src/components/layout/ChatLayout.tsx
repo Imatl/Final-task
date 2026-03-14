@@ -58,7 +58,7 @@ export function ChatLayout() {
               <Headphones className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="font-bold text-white tracking-wide">SupportFlow</span>
+              <span className="font-bold text-white tracking-wide">Kairon</span>
               <p className="text-xs text-gray-500">AI Support</p>
             </div>
           </div>

@@ -6,6 +6,7 @@ type Customer struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
+	Phone     *string   `json:"phone,omitempty"`
 	Plan      string    `json:"plan"`
 	CreatedAt time.Time `json:"created_at"`
 }

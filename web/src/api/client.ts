@@ -160,4 +160,19 @@ export const companiesApi = {
   list: () => api.get<{ companies: Company[]; total: number }>('/companies'),
 };
 
+export interface IntegrationInfo {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+}
+
+export const integrationsApi = {
+  list: () => api.get<IntegrationInfo[]>('/integrations'),
+  connect: (type: string, config: Record<string, string>) =>
+    api.post<{ status: string; id: string }>('/integrations/connect', { type, config }),
+  disconnect: (id: string) =>
+    api.post('/integrations/disconnect', { id }),
+};
+
 export default api;

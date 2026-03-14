@@ -145,6 +145,12 @@ func executeCancelSub(ctx context.Context, ticketID, paramsJSON string) ToolResu
 	}
 }
 
+var planPrices = map[string]float64{
+	"free":    0,
+	"basic":   9.99,
+	"premium": 29.99,
+}
+
 func executeLookupBilling(ctx context.Context, ticketID, paramsJSON string) ToolResult {
 	ticket, err := postgre.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -157,24 +163,39 @@ func executeLookupBilling(ctx context.Context, ticketID, paramsJSON string) Tool
 		return ToolResult{Success: false, Message: "customer not found"}
 	}
 
-	billing := map[string]any{
-		"customer":       customer.Name,
-		"plan":           customer.Plan,
-		"last_payment":   "$9.99 on 2026-03-01",
-		"next_billing":   "2026-04-01",
-		"payment_method": "Visa **** 4242",
-		"payments": []map[string]any{
-			{"date": "2026-03-01", "amount": 9.99, "status": "completed"},
-			{"date": "2026-02-01", "amount": 9.99, "status": "completed"},
-			{"date": "2026-01-15", "amount": 9.99, "status": "double_charge"},
-			{"date": "2026-01-15", "amount": 9.99, "status": "double_charge"},
-		},
+	price := planPrices[customer.Plan]
+	now := time.Now()
+
+	var payments []any
+	if price > 0 {
+		for i := 0; i < 3; i++ {
+			d := now.AddDate(0, -i, 0)
+			payments = append(payments, map[string]any{
+				"date":   d.Format("2006-01-02"),
+				"amount": price,
+				"status": "paid",
+				"method": "card ending 4242",
+			})
+		}
+	}
+
+	data := map[string]any{
+		"customer":        customer.Name,
+		"email":           customer.Email,
+		"plan":            customer.Plan,
+		"plan_price":      price,
+		"billing_status":  "active",
+		"recent_payments": payments,
+		"open_issues":     []any{},
+	}
+	if customer.Phone != nil {
+		data["phone"] = *customer.Phone
 	}
 
 	return ToolResult{
 		Success: true,
 		Message: fmt.Sprintf("Billing info for %s retrieved", customer.Name),
-		Data:    billing,
+		Data:    data,
 	}
 }
 
@@ -190,17 +211,20 @@ func executeLookupCustomer(ctx context.Context, ticketID, paramsJSON string) Too
 		return ToolResult{Success: false, Message: "customer not found"}
 	}
 
+	data := map[string]any{
+		"id":         customer.ID,
+		"name":       customer.Name,
+		"email":      customer.Email,
+		"plan":       customer.Plan,
+		"created_at": customer.CreatedAt,
+	}
+	if customer.Phone != nil {
+		data["phone"] = *customer.Phone
+	}
+
 	return ToolResult{
 		Success: true,
 		Message: "Customer info retrieved",
-		Data: map[string]any{
-			"id":              customer.ID,
-			"name":            customer.Name,
-			"email":           customer.Email,
-			"plan":            customer.Plan,
-			"created_at":      customer.CreatedAt,
-			"tickets_count":   3,
-			"lifetime_value":  "$149.85",
-		},
+		Data:    data,
 	}
 }

@@ -39,29 +39,46 @@ var tools = []ToolDef{
 	{Name: "cancel_subscription", Description: "Cancel customer subscription", Parameters: map[string]any{}},
 }
 
-const systemPrompt = `You are SupportFlow AI, an intelligent customer support assistant.
+const systemPromptTpl = `You are Kairon, an intelligent customer support assistant.
 You communicate directly with customers to resolve their issues quickly.
 
 IMPORTANT: You already have access to the customer's account through the ticket system.
-Do NOT ask the customer for their ID, email, or account details — use the lookup_customer and lookup_billing tools immediately to get this information.
+Do NOT ask the customer for their ID, email, or account details — use the lookup_customer tool to get this information when needed.
 
 Your capabilities:
-- Look up customer and billing information automatically
+- Look up customer information automatically
 - Execute actions: refunds, plan changes, password resets, escalations, emails
 - Provide clear, helpful responses
 
 Guidelines:
-- ALWAYS call lookup_customer and/or lookup_billing FIRST before responding — you have the customer context from the ticket
-- For clear-cut cases (double charges, password resets): resolve immediately with high confidence
+- For greetings or generic messages (like "hi", "hello", "start", "/start"): just greet the customer warmly and ask how you can help. Do NOT call any tools for greetings
+- When the customer describes a specific problem or asks a question: call lookup_customer FIRST, then help resolve it
+- ONLY report facts returned by tools. NEVER invent, assume, or hallucinate data not present in tool results
+- NEVER include raw customer data (name, email, phone, plan, dates) in your response. Use it internally to perform actions, but do not display it to the customer
 - For ambiguous cases: explain options and recommend a course of action
-- Be empathetic, professional, and concise
-- Respond in the same language as the customer's message
+- Be empathetic, professional, and VERY concise — 2-3 sentences max. No numbered lists or bullet points unless necessary
 - Never ask the customer for information you can look up yourself
 - Do not use emojis
-
+- Do NOT generate any intermediate thinking or status messages like "let me check" — just call the tools silently and respond with the result
+%s
 After taking action, briefly confirm what was done.`
 
-func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*structs.ChatResponse, error) {
+func buildSystemPrompt(lang string) string {
+	langRule := ""
+	switch lang {
+	case "ru", "uk":
+		langRule = "- ALWAYS respond in Ukrainian regardless of the customer's language"
+	default:
+		if lang != "" {
+			langRule = "- ALWAYS respond in English regardless of the customer's language"
+		} else {
+			langRule = "- Respond in the same language as the customer's message"
+		}
+	}
+	return fmt.Sprintf(systemPromptTpl, langRule)
+}
+
+func ProcessMessage(ctx context.Context, ticketID, customerMessage, lang string) (*structs.ChatResponse, error) {
 	provider, providerName := GetActiveProvider()
 	if provider == nil {
 		return nil, fmt.Errorf("no AI provider configured")
@@ -89,7 +106,7 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*str
 		start := time.Now()
 
 		resp, err := provider.Chat(ctx, LLMRequest{
-			SystemPrompt: systemPrompt,
+			SystemPrompt: buildSystemPrompt(lang),
 			Messages:     llmMessages,
 			Tools:        tools,
 			MaxTokens:    core.GetInt("anthropic.max_tokens", 4096),
@@ -118,14 +135,8 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*str
 		log.Printf("[%s] latency=%dms tokens_in=%d tokens_out=%d tools=%d",
 			providerName, latency, resp.Usage.InputTokens, resp.Usage.OutputTokens, len(resp.ToolCalls))
 
-		if resp.Text != "" {
-			if response.Message != "" {
-				response.Message += "\n"
-			}
-			response.Message += resp.Text
-		}
-
 		if len(resp.ToolCalls) == 0 {
+			response.Message = resp.Text
 			break
 		}
 

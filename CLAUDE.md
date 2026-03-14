@@ -1,4 +1,4 @@
-# SupportFlow AI
+# Kairon
 
 AI-powered customer support operations assistant.
 

@@ -72,7 +72,7 @@ export function Sidebar() {
         </div>
         {!sidebarCollapsed && (
           <div className="flex flex-col">
-            <span className="font-bold text-white tracking-wide">SupportFlow</span>
+            <span className="font-bold text-white tracking-wide">Kairon</span>
             <span className="text-xs text-gray-400">{t('sidebar.subtitle')}</span>
           </div>
         )}

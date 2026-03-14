@@ -92,7 +92,7 @@ func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			"analysis":  analysis,
 		})
 
-		resp, err := ai.ProcessMessage(ctx, req.TicketID, req.Message)
+		resp, err := ai.ProcessMessage(ctx, req.TicketID, req.Message, "")
 		if err != nil {
 			log.Printf("[ws] AI process error: %v", err)
 			sendWSError(conn, "AI processing failed: "+err.Error())
@@ -156,7 +156,7 @@ func HandleChatHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[chat] save customer message error: %v", err)
 	}
 
-	resp, err := ai.ProcessMessage(ctx, req.TicketID, req.Message)
+	resp, err := ai.ProcessMessage(ctx, req.TicketID, req.Message, "")
 	if err != nil {
 		log.Printf("[chat] AI error: %v", err)
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)

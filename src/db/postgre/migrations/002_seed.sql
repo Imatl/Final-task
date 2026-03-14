@@ -7,7 +7,7 @@ INSERT INTO supportflow.customers (id, name, email, plan) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO supportflow.agents (id, name, email, role, is_online) VALUES
-    ('b0000000-0000-0000-0000-000000000001', 'Support Agent 1', 'agent1@supportflow.com', 'agent', true),
-    ('b0000000-0000-0000-0000-000000000002', 'Support Agent 2', 'agent2@supportflow.com', 'agent', true),
-    ('b0000000-0000-0000-0000-000000000003', 'Team Lead', 'lead@supportflow.com', 'lead', true)
+    ('b0000000-0000-0000-0000-000000000001', 'Support Agent 1', 'agent1@kairon.ai', 'agent', true),
+    ('b0000000-0000-0000-0000-000000000002', 'Support Agent 2', 'agent2@kairon.ai', 'agent', true),
+    ('b0000000-0000-0000-0000-000000000003', 'Team Lead', 'lead@kairon.ai', 'lead', true)
 ON CONFLICT (id) DO NOTHING;

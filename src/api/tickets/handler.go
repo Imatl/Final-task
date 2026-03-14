@@ -11,6 +11,7 @@ import (
 	"supportflow/core/structs"
 	"supportflow/db/postgre"
 	"supportflow/services/ai"
+	"supportflow/services/integrations"
 )
 
 func HandleList(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +130,8 @@ func HandleAgentReply(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	if _, err := postgre.GetTicket(ctx, id); err != nil {
+	ticket, err := postgre.GetTicket(ctx, id)
+	if err != nil {
 		log.Printf("[tickets] agent reply - ticket %s not found: %v", id, err)
 		http.Error(w, `{"error":"ticket not found"}`, http.StatusNotFound)
 		return
@@ -150,6 +152,12 @@ func HandleAgentReply(w http.ResponseWriter, r *http.Request) {
 		_ = postgre.AssignTicket(ctx, id, body.AgentID)
 	}
 	_ = postgre.UpdateTicketStatus(ctx, id, "in_progress")
+
+	if ticket.Channel == "telegram" {
+		if err := integrations.SendToCustomer(ticket.CustomerID, body.Message); err != nil {
+			log.Printf("[tickets] send to telegram error: %v", err)
+		}
+	}
 
 	log.Printf("[tickets] agent reply on %s by %s", id, body.AgentID)
 	w.Header().Set("Content-Type", "application/json")

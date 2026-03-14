@@ -18,6 +18,7 @@ import (
 	dbRedis "supportflow/db/redis"
 	"supportflow/routes"
 	"supportflow/services/ai"
+	"supportflow/services/integrations"
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 	}
 
 	ai.Init()
+	integrations.Init(ctx)
 
 	if err := dbRedis.Init(ctx); err != nil {
 		log.Printf("Redis init failed (continuing without): %v", err)
@@ -70,7 +72,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("SupportFlow AI starting on :%s", port)
+		log.Printf("Kairon starting on :%s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}

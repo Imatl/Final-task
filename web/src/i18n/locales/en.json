@@ -99,8 +99,11 @@
       "web": "Web Widget",
       "shopify": "Shopify"
     },
-    "active": "connected",
-    "connect": "available",
+    "connected": "connected",
+    "available": "available",
+    "connectBtn": "Connect",
+    "disconnect": "Disconnect",
+    "builtIn": "Built-in — works via REST API, no configuration needed",
     "playground": "API Playground",
     "messagePlaceholder": "Type a customer message to test...",
     "requestExample": "Request",
