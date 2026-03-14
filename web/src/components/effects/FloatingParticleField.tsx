@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useThemeStore } from '@/store/theme';
 
 interface Particle {
   id: number;
@@ -7,14 +8,21 @@ interface Particle {
   layer: number;
 }
 
-const layerConfigs = [
+const DARK_LAYERS = [
   { speed: 0.2, size: 1, opacity: 0.3, color: '#a855f7' },
   { speed: 0.8, size: 2, opacity: 0.4, color: '#c084fc' },
   { speed: 1.0, size: 3, opacity: 0.7, color: '#e879f9' },
 ];
 
+const LIGHT_LAYERS = [
+  { speed: 0.2, size: 1, opacity: 0.22, color: '#A67C42' },
+  { speed: 0.8, size: 2, opacity: 0.28, color: '#C4847A' },
+  { speed: 1.0, size: 2, opacity: 0.35, color: '#7A8F52' },
+];
+
 export function FloatingParticleField() {
   const [scrollY, setScrollY] = useState(0);
+  const { theme } = useThemeStore();
 
   const prefersReducedMotion = typeof window !== 'undefined'
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -47,6 +55,8 @@ export function FloatingParticleField() {
   }, [handleScroll, prefersReducedMotion]);
 
   if (prefersReducedMotion) return null;
+
+  const layerConfigs = theme === 'light' ? LIGHT_LAYERS : DARK_LAYERS;
 
   return (
     <div className="absolute inset-0 overflow-hidden">

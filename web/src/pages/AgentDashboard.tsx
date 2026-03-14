@@ -67,7 +67,7 @@ function TicketRow({ ticket, isSelected, onSelect }: { ticket: Ticket; isSelecte
         <div className="text-xs text-gray-500">{ticket.category} | {ageLabel} {t('dashboard.ago')}</div>
       </div>
       <Badge variant={PRIORITY_BADGE[ticket.priority] || 'default'}>{ticket.priority}</Badge>
-      <Badge variant={ticket.status === 'open' ? 'error' : ticket.status === 'resolved' ? 'success' : 'default'} dot>{ticket.status}</Badge>
+      <Badge variant={ticket.status === 'open' ? 'error' : ticket.status === 'resolved' ? 'success' : 'default'} dot>{t(`dashboard.statuses.${ticket.status}`)}</Badge>
       <ChevronRight className="w-4 h-4 text-gray-600" />
     </div>
   );
@@ -140,7 +140,7 @@ function TicketChatPanel({ ticketId, onClose }: { ticketId: string; onClose: () 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-white text-sm truncate">{data.ticket.subject}</h3>
-            <Badge variant={data.ticket.status === 'open' ? 'error' : data.ticket.status === 'resolved' ? 'success' : 'default'} dot>{data.ticket.status}</Badge>
+            <Badge variant={data.ticket.status === 'open' ? 'error' : data.ticket.status === 'resolved' ? 'success' : 'default'} dot>{t(`dashboard.statuses.${data.ticket.status}`)}</Badge>
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <User className="w-3 h-3 text-gray-500" />
@@ -263,7 +263,7 @@ export function AgentDashboardPage() {
                     : 'text-gray-400 hover:text-gray-200'
                 )}
               >
-                {s || t('dashboard.all')}
+                {s ? t(`dashboard.statuses.${s}`) : t('dashboard.all')}
               </button>
             ))}
           </div>

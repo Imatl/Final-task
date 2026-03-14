@@ -75,6 +75,11 @@ body {
   50% { transform: translateY(-10px); }
 }
 
+@keyframes thinking-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, rgba(168,85,247,0.1), transparent);
   background-size: 200% 100%;
@@ -93,17 +98,6 @@ body {
   animation: float 6s ease-in-out infinite;
 }
 
-@keyframes thinking-bounce {
-  0%, 60%, 100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-  30% {
-    transform: translateY(-6px);
-    opacity: 1;
-  }
-}
-
 .thinking-dots span {
   animation: thinking-bounce 1.4s ease-in-out infinite;
 }
@@ -113,5 +107,116 @@ body {
   scrollbar-width: none;
 }
 .scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Light theme ──────────────────────────────────────────────────────────────
+   Palette:
+     Слоновая кость   ivory   #F5F0E8  — page canvas
+     Пергамент        parchment #EDE4D4 — sidebar / header
+     Чистый белый     white   #FFFFFF  — cards (чёткий контраст)
+     Кофейный         coffee  #D4BFAA  — borders / dividers
+     Карамельный      caramel #BFAA94  — hover states
+     Пудрово-розовый  powder  #F5EAE8  — active nav bg tint
+     Пыльная роза     rose    #C4847A  — logo gradient / soft accent
+     Горчичный        mustard #A67C42  — primary accent / CTAs / active
+     Янтарный         amber   #BF9A5A  — secondary accent
+     Оливковый        olive   #7A8F52  — tertiary accent
+     Текст эспрессо   espresso #2C1F12 — primary text
+     Коричневый       brown   #6B5040  — secondary text
+     Тёплый серый     warm-gray #9A7860 — muted text
+──────────────────────────────────────────────────────────────────────────────── */
+
+html[data-theme="light"] {
+  --color-cosmic-950: #F5F0E8;
+  --color-cosmic-900: #EDE4D4;
+  --color-cosmic-800: #FFFFFF;
+  --color-cosmic-700: #D4BFAA;
+  --color-cosmic-600: #BFAA94;
+
+  --color-velvet-900: #F5EAE8;
+  --color-velvet-800: #EDD8D4;
+  --color-velvet-700: #DCC0BA;
+  --color-velvet-600: #C4847A;
+  --color-velvet-500: #B06A60;
+
+  --color-neon-violet: #A67C42;
+  --color-neon-purple: #BF9A5A;
+  --color-neon-pink:   #C4847A;
+  --color-neon-cyan:   #7A8F52;
+  --color-neon-blue:   #6A80A0;
+  --color-neon-green:  #6B9050;
+}
+
+html[data-theme="light"] body {
+  background-color: var(--color-cosmic-950);
+  color: #2C1F12;
+}
+
+html[data-theme="light"] * {
+  scrollbar-color: var(--color-cosmic-700) transparent;
+}
+
+html[data-theme="light"] ::selection {
+  background-color: rgba(166, 124, 66, 0.2);
+  color: #2C1F12;
+}
+
+/* ── Glow — warm amber instead of purple ─────────────────────────────────── */
+html[data-theme="light"] .neon-glow {
+  box-shadow: 0 0 20px rgba(166, 124, 66, 0.3), 0 0 40px rgba(166, 124, 66, 0.12);
+}
+
+html[data-theme="light"] .neon-glow-sm {
+  box-shadow: 0 0 8px rgba(166, 124, 66, 0.25), 0 0 16px rgba(166, 124, 66, 0.1);
+}
+
+/* ── Gradient text ────────────────────────────────────────────────────────── */
+html[data-theme="light"] .text-gradient {
+  background: linear-gradient(135deg, #A67C42, #C4847A, #7A8F52);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Shimmer & pulse ──────────────────────────────────────────────────────── */
+html[data-theme="light"] .animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(166, 124, 66, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+html[data-theme="light"] .animate-pulse-neon {
+  animation: pulse-warm 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warm {
+  0%, 100% { box-shadow: 0 0 10px rgba(166, 124, 66, 0.3); }
+  50%       { box-shadow: 0 0 22px rgba(166, 124, 66, 0.55); }
+}
+
+/* ── Text ─────────────────────────────────────────────────────────────────── */
+html[data-theme="light"] .text-white   { color: #2C1F12; }
+html[data-theme="light"] .text-gray-200 { color: #3D2C1C; }
+html[data-theme="light"] .text-gray-300 { color: #5A3E2A; }
+html[data-theme="light"] .text-gray-400 { color: #6B5040; }
+html[data-theme="light"] .text-gray-500 { color: #9A7860; }
+
+/* ── Shadows — warm espresso tint ────────────────────────────────────────── */
+html[data-theme="light"] .shadow {
+  box-shadow: 0 1px 3px rgba(44, 31, 18, 0.1), 0 1px 2px rgba(44, 31, 18, 0.06) !important;
+}
+
+html[data-theme="light"] .shadow-xl {
+  box-shadow: 0 16px 28px -4px rgba(44, 31, 18, 0.12), 0 6px 12px -2px rgba(44, 31, 18, 0.08) !important;
+}
+
+/* ── Frosted glass (header / dropdowns) ──────────────────────────────────── */
+html[data-theme="light"] .backdrop-blur-sm {
+  background-color: rgba(245, 240, 232, 0.9);
+}
+
+/* ── Hide large neon orbs — only small dots on light bg ──────────────────── */
+html[data-theme="light"] .bg-orbs {
   display: none;
 }

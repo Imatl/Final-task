@@ -3,15 +3,20 @@
     "dashboard": "Dashboard",
     "integrations": "Integrations",
     "analytics": "Analytics",
-    "settings": "Settings"
+    "settings": "AI Config",
+    "staffPanel": "Staff",
+    "companies": "Companies"
   },
   "sidebar": {
     "subtitle": "AI Support",
     "main": "Main",
     "management": "Management",
-    "settings": "Settings",
+    "settings": "AI Config",
     "logout": "Log out",
-    "languageNote": "Interface language"
+    "languageNote": "Language",
+    "themeLabel": "Theme",
+    "dark": "Dark",
+    "light": "Light"
   },
   "chat": {
     "title": "Support Chat",
@@ -58,7 +63,14 @@
     "agentReply": "Agent Reply",
     "replyPlaceholder": "Write a reply to the customer...",
     "aiSuggest": "AI Suggest",
-    "agent": "Agent"
+    "agent": "Agent",
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "waiting": "Waiting",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
   },
   "analytics": {
     "title": "Analytics",
@@ -100,6 +112,49 @@
     "step2Desc": "AI understands intent, looks up context, and executes actions automatically.",
     "step3Title": "Respond",
     "step3Desc": "Structured response with resolution details sent back to your channel."
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "createAccount": "Create your account",
+    "tagline": "AI-powered support for your team",
+    "continueGoogle": "Continue with Google",
+    "orEmail": "or continue with email",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "toSignUp": "Sign up",
+    "toSignIn": "Sign in",
+    "invalidCredentials": "Invalid email or password",
+    "passwordMismatch": "Passwords do not match",
+    "registrationSent": "Request submitted",
+    "registrationPending": "Your registration request has been sent to an administrator for approval."
+  },
+  "staffPanel": {
+    "title": "Staff",
+    "subtitle": "Agent performance and platform statistics",
+    "totalAgents": "Total Agents",
+    "totalResolved": "Total Resolved",
+    "avgQuality": "Avg Quality",
+    "staffList": "Staff List",
+    "agents": "agents",
+    "resolved": "resolved"
+  },
+  "companies": {
+    "title": "Companies",
+    "subtitle": "All registered companies, their staff count and AI spend",
+    "total": "Total Companies",
+    "totalStaff": "Total Employees",
+    "totalSpend": "Total AI Spend",
+    "colName": "Company",
+    "colPlan": "Plan",
+    "colStaff": "Employees",
+    "colAiSpend": "AI Spend (USD)",
+    "error": "Failed to load companies"
   },
   "settings": {
     "title": "Settings & Performance",

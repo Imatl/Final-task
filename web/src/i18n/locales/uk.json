@@ -3,15 +3,20 @@
     "dashboard": "Дашборд",
     "integrations": "Інтеграції",
     "analytics": "Аналітика",
-    "settings": "Налаштування"
+    "settings": "AI Конфіг",
+    "staffPanel": "Персонал",
+    "companies": "Компанії"
   },
   "sidebar": {
     "subtitle": "AI Підтримка",
     "main": "Головне",
     "management": "Управління",
-    "settings": "Налаштування",
+    "settings": "AI Конфіг",
     "logout": "Вийти",
-    "languageNote": "Мова інтерфейсу"
+    "languageNote": "Мова",
+    "themeLabel": "Тема",
+    "dark": "Темна",
+    "light": "Світла"
   },
   "chat": {
     "title": "Чат підтримки",
@@ -58,7 +63,14 @@
     "agentReply": "Відповідь агента",
     "replyPlaceholder": "Напишіть відповідь клієнту...",
     "aiSuggest": "AI Підказка",
-    "agent": "Агент"
+    "agent": "Агент",
+    "statuses": {
+      "open": "Відкрито",
+      "in_progress": "В роботі",
+      "waiting": "Очікує",
+      "resolved": "Вирішено",
+      "closed": "Закрито"
+    }
   },
   "analytics": {
     "title": "Аналітика",
@@ -100,6 +112,49 @@
     "step2Desc": "AI розуміє намір, знаходить контекст та автоматично виконує дії.",
     "step3Title": "Відповідь",
     "step3Desc": "Структурована відповідь з деталями рішення повертається у ваш канал."
+  },
+  "auth": {
+    "welcomeBack": "З поверненням",
+    "createAccount": "Створіть акаунт",
+    "tagline": "AI-підтримка для вашої команди",
+    "continueGoogle": "Продовжити з Google",
+    "orEmail": "або через email",
+    "email": "Email",
+    "password": "Пароль",
+    "confirmPassword": "Підтвердити пароль",
+    "forgotPassword": "Забули пароль?",
+    "signIn": "Увійти",
+    "signUp": "Зареєструватися",
+    "noAccount": "Ще немає акаунту?",
+    "hasAccount": "Вже є акаунт?",
+    "toSignUp": "Зареєструватися",
+    "toSignIn": "Увійти",
+    "invalidCredentials": "Невірний email або пароль",
+    "passwordMismatch": "Паролі не збігаються",
+    "registrationSent": "Запит надіслано",
+    "registrationPending": "Ваш запит на реєстрацію надіслано адміністратору для підтвердження."
+  },
+  "staffPanel": {
+    "title": "Персонал",
+    "subtitle": "Продуктивність агентів та статистика платформи",
+    "totalAgents": "Всього агентів",
+    "totalResolved": "Всього вирішено",
+    "avgQuality": "Сер. якість",
+    "staffList": "Список співробітників",
+    "agents": "агентів",
+    "resolved": "вирішено"
+  },
+  "companies": {
+    "title": "Компанії",
+    "subtitle": "Всі зареєстровані компанії, кількість співробітників та витрати на AI",
+    "total": "Всього компаній",
+    "totalStaff": "Всього співробітників",
+    "totalSpend": "Загальні витрати AI",
+    "colName": "Компанія",
+    "colPlan": "Тариф",
+    "colStaff": "Співробітники",
+    "colAiSpend": "Витрати AI (USD)",
+    "error": "Не вдалося завантажити компанії"
   },
   "settings": {
     "title": "Налаштування та продуктивність",

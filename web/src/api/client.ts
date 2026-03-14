@@ -148,4 +148,16 @@ export const settingsApi = {
   getMetrics: (limit?: number) => api.get<MetricsResponse>('/settings/metrics', { params: { limit } }),
 };
 
+export interface Company {
+  id: string;
+  name: string;
+  staff_count: number;
+  ai_spend_usd: number;
+  created_at: string;
+}
+
+export const companiesApi = {
+  list: () => api.get<{ companies: Company[]; total: number }>('/companies'),
+};
+
 export default api;

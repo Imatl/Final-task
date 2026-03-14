@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useThemeStore } from '@/store/theme';
 
 interface Star {
   id: number;
@@ -10,12 +11,16 @@ interface Star {
   delay: number;
 }
 
+const DARK_COLORS  = ['#a855f7', '#22d3ee', '#e879f9'];
+const LIGHT_COLORS = ['#A67C42', '#C4847A', '#7A8F52', '#BF9A5A', '#C09878', '#8FAA70', '#D4A882'];
+
 export function AmbientTwinkle({ starCount = 60 }: { starCount?: number }) {
   if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return null;
   }
 
-  const colors = ['#a855f7', '#22d3ee', '#e879f9'];
+  const { theme } = useThemeStore();
+  const colors = theme === 'light' ? LIGHT_COLORS : DARK_COLORS;
 
   const stars = useMemo<Star[]>(() => {
     return Array.from({ length: starCount }, (_, i) => ({
@@ -27,7 +32,7 @@ export function AmbientTwinkle({ starCount = 60 }: { starCount?: number }) {
       duration: 2000 + Math.random() * 4000,
       delay: Math.random() * 6000,
     }));
-  }, [starCount]);
+  }, [starCount, theme]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
