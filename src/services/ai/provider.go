@@ -135,6 +135,8 @@ func GetMetricsStats() map[string]any {
 	}
 
 	byProvider := map[string][]int64{}
+	providerTokens := map[string][2]int{}
+	providerErrors := map[string]int{}
 	totalTokensIn := 0
 	totalTokensOut := 0
 	totalToolCalls := 0
@@ -145,8 +147,13 @@ func GetMetricsStats() map[string]any {
 		totalTokensIn += m.InputTokens
 		totalTokensOut += m.OutputTokens
 		totalToolCalls += m.ToolCalls
+		t := providerTokens[m.Provider]
+		t[0] += m.InputTokens
+		t[1] += m.OutputTokens
+		providerTokens[m.Provider] = t
 		if m.Error != "" {
 			errors++
+			providerErrors[m.Provider]++
 		}
 	}
 
@@ -164,11 +171,14 @@ func GetMetricsStats() map[string]any {
 				max = l
 			}
 		}
+		t := providerTokens[name]
 		providerStats[name] = map[string]any{
-			"calls":      len(latencies),
-			"avg_ms":     sum / int64(len(latencies)),
-			"min_ms":     min,
-			"max_ms":     max,
+			"calls":        len(latencies),
+			"avg_ms":       sum / int64(len(latencies)),
+			"min_ms":       min,
+			"max_ms":       max,
+			"total_tokens": t[0] + t[1],
+			"errors":       providerErrors[name],
 		}
 	}
 

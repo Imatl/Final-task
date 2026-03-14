@@ -121,7 +121,11 @@
     "createAccount": "Create your account",
     "tagline": "AI-powered support for your team",
     "continueGoogle": "Continue with Google",
-    "orEmail": "or continue with email",
+    "signUpGoogle": "Sign up with Google",
+    "orEmail": "or sign in with email",
+    "orManual": "or fill in manually",
+    "googleLinked": "Google account linked",
+    "googleFailed": "Google sign-up failed",
     "fullName": "Full name",
     "fullNamePlaceholder": "John Smith",
     "company": "Company",
@@ -129,17 +133,19 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm password",
-    "forgotPassword": "Forgot password?",
     "signIn": "Sign in",
     "signUp": "Create account",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "toSignUp": "Sign up",
     "toSignIn": "Sign in",
-    "invalidCredentials": "Invalid email or password",
     "passwordMismatch": "Passwords do not match",
-    "registrationSent": "Request submitted",
-    "registrationPending": "Your registration request has been sent to an administrator for approval."
+    "invalidCredentials": "Incorrect email or password",
+    "registrationSent": "Account created",
+    "registrationPending": "Your account has been created. You can now sign in.",
+    "invalidToken": "This invite link is invalid or has expired",
+    "emailTaken": "An account with this email already exists",
+    "registrationFailed": "Registration failed. Please try again."
   },
   "staffPanel": {
     "title": "Staff",
@@ -161,7 +167,14 @@
     "colPlan": "Plan",
     "colStaff": "Employees",
     "colAiSpend": "AI Spend (USD)",
-    "error": "Failed to load companies"
+    "error": "Failed to load companies",
+    "generateInvite": "Invite Company Admin",
+    "inviteCompanyLabel": "Company name",
+    "inviteCompanyPlaceholder": "Enter company name",
+    "generateBtn": "Generate Link",
+    "inviteLinkLabel": "Invite link",
+    "copied": "Copied",
+    "copyLink": "Copy"
   },
   "settings": {
     "title": "Settings & Performance",
@@ -179,6 +192,10 @@
     "tools": "Tools",
     "errorCol": "Error",
     "noData": "No data yet",
-    "active": "active"
+    "active": "active",
+    "knowledgeBase": "Knowledge Base",
+    "kbQuestionPlaceholder": "Question (e.g. What is your refund policy?)",
+    "kbAnswerPlaceholder": "Answer",
+    "kbAdd": "Add Entry"
   }
 }

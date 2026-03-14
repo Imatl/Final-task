@@ -9,7 +9,9 @@ import (
 )
 
 func HandleOverview(w http.ResponseWriter, r *http.Request) {
-	overview, err := postgre.GetAnalyticsOverview(r.Context())
+	company := r.URL.Query().Get("company")
+
+	overview, err := postgre.GetAnalyticsOverview(r.Context(), company)
 	if err != nil {
 		log.Printf("[analytics] overview error: %v", err)
 		http.Error(w, `{"error":"failed to fetch analytics"}`, http.StatusInternalServerError)
@@ -21,7 +23,9 @@ func HandleOverview(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleAgentPerformance(w http.ResponseWriter, r *http.Request) {
-	perfs, err := postgre.GetAgentPerformance(r.Context())
+	company := r.URL.Query().Get("company")
+
+	perfs, err := postgre.GetAgentPerformance(r.Context(), company)
 	if err != nil {
 		log.Printf("[analytics] agent performance error: %v", err)
 		http.Error(w, `{"error":"failed to fetch performance"}`, http.StatusInternalServerError)

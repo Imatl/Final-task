@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -20,6 +21,7 @@ func HandleList(w http.ResponseWriter, r *http.Request) {
 		Priority: r.URL.Query().Get("priority"),
 		AgentID:  r.URL.Query().Get("agent_id"),
 		Category: r.URL.Query().Get("category"),
+		Company:  r.URL.Query().Get("company"),
 	}
 	if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil {
 		filter.Limit = l
@@ -89,6 +91,10 @@ func HandleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[tickets] update status %s -> %s error: %v", id, body.Status, err)
 		http.Error(w, `{"error":"update failed"}`, http.StatusInternalServerError)
 		return
+	}
+
+	if body.Status == "resolved" || body.Status == "closed" {
+		go ai.GenerateTicketSummary(context.Background(), id)
 	}
 
 	log.Printf("[tickets] status updated %s -> %s", id, body.Status)
@@ -185,18 +191,33 @@ func HandleApproveAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status := "approved"
-	if !body.Approved {
-		status = "rejected"
+	if body.Approved {
+		action, err := postgre.GetAction(r.Context(), body.ActionID)
+		if err != nil {
+			log.Printf("[tickets] get action %s error: %v", body.ActionID, err)
+			http.Error(w, `{"error":"action not found"}`, http.StatusNotFound)
+			return
+		}
+
+		result := ai.ExecuteTool(r.Context(), action.TicketID, action.Type, action.Params)
+		resultJSON, _ := json.Marshal(result)
+		resultStr := string(resultJSON)
+
+		if err := postgre.UpdateActionStatus(r.Context(), body.ActionID, "approved", resultStr); err != nil {
+			log.Printf("[tickets] approve action %s error: %v", body.ActionID, err)
+			http.Error(w, `{"error":"update failed"}`, http.StatusInternalServerError)
+			return
+		}
+		log.Printf("[tickets] action %s approved and executed", body.ActionID)
+	} else {
+		if err := postgre.UpdateActionStatus(r.Context(), body.ActionID, "rejected", ""); err != nil {
+			log.Printf("[tickets] reject action %s error: %v", body.ActionID, err)
+			http.Error(w, `{"error":"update failed"}`, http.StatusInternalServerError)
+			return
+		}
+		log.Printf("[tickets] action %s rejected", body.ActionID)
 	}
 
-	if err := postgre.UpdateActionStatus(r.Context(), body.ActionID, status, ""); err != nil {
-		log.Printf("[tickets] approve action %s error: %v", body.ActionID, err)
-		http.Error(w, `{"error":"update failed"}`, http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("[tickets] action %s -> %s", body.ActionID, status)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"ok":true}`))
 }

@@ -18,9 +18,12 @@ import {
   Loader2,
   ArrowLeft,
   Shield,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui';
+import { useAuthStore } from '@/store/auth';
 
 const PRIORITY_BADGE: Record<string, 'error' | 'warning' | 'success' | 'default'> = {
   critical: 'error',
@@ -160,6 +163,33 @@ function TicketChatPanel({ ticketId, onClose }: { ticketId: string; onClose: () 
           </div>
         )}
 
+        {data.actions?.filter((a) => a.status === 'pending').map((a) => (
+          <div key={a.id} className="mx-auto max-w-md bg-amber-900/20 border border-amber-500/30 rounded-lg px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-amber-400">{t(`chat.actionLabels.${a.type}`)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{a.params}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => ticketsApi.approveAction(a.id, true, '').then(() => queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] }))}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-neon-green/20 border border-neon-green/30 text-neon-green hover:bg-neon-green/30 transition-all"
+                >
+                  <ThumbsUp className="w-3 h-3" />
+                  Approve
+                </button>
+                <button
+                  onClick={() => ticketsApi.approveAction(a.id, false, '').then(() => queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] }))}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all"
+                >
+                  <ThumbsDown className="w-3 h-3" />
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
         {data.messages?.map((msg) => {
           const isCustomer = msg.role === 'customer';
           return (
@@ -232,12 +262,17 @@ function TicketChatPanel({ ticketId, onClose }: { ticketId: string; onClose: () 
 
 export function AgentDashboardPage() {
   const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
 
+  const params: Record<string, string> = {};
+  if (statusFilter) params.status = statusFilter;
+  if (user && user.level === 1) params.agent_id = user.id;
+
   const { data, isLoading } = useQuery({
-    queryKey: ['tickets', statusFilter],
-    queryFn: () => ticketsApi.list(statusFilter ? { status: statusFilter } : {}).then((r) => r.data),
+    queryKey: ['tickets', statusFilter, user?.level],
+    queryFn: () => ticketsApi.list(Object.keys(params).length ? params : undefined).then((r) => r.data),
     refetchInterval: 5000,
   });
 

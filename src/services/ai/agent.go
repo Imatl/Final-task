@@ -102,11 +102,24 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage, lang string)
 	response := &structs.ChatResponse{TicketID: ticketID}
 	var allActions []structs.Action
 
+	systemPrompt := buildSystemPrompt(lang)
+	ticket, err := postgre.GetTicket(ctx, ticketID)
+	if err == nil && ticket.Company != nil && *ticket.Company != "" {
+		entries, kbErr := postgre.ListKBEntries(ctx, *ticket.Company)
+		if kbErr == nil && len(entries) > 0 {
+			kbContext := "\n\nCompany Knowledge Base (use this to answer customer questions):\n"
+			for _, e := range entries {
+				kbContext += fmt.Sprintf("Q: %s\nA: %s\n\n", e.Question, e.Answer)
+			}
+			systemPrompt += kbContext
+		}
+	}
+
 	for i := 0; i < 5; i++ {
 		start := time.Now()
 
 		resp, err := provider.Chat(ctx, LLMRequest{
-			SystemPrompt: buildSystemPrompt(lang),
+			SystemPrompt: systemPrompt,
 			Messages:     llmMessages,
 			Tools:        tools,
 			MaxTokens:    core.GetInt("anthropic.max_tokens", 4096),
@@ -148,25 +161,48 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage, lang string)
 		llmMessages = append(llmMessages, assistantMsg)
 
 		for _, tc := range resp.ToolCalls {
-			result := ExecuteTool(ctx, ticketID, tc.Name, tc.Params)
-			resultJSON, err := json.Marshal(result)
-		if err != nil {
-			log.Printf("[ai] marshal tool result error: %v", err)
-		}
+			requiresApproval := tc.Name == "refund" || tc.Name == "cancel_subscription"
 
-			resultStr := string(resultJSON)
-			action := structs.Action{
-				TicketID:   ticketID,
-				Type:       tc.Name,
-				Params:     tc.Params,
-				Status:     constants.ActionStatusExecuted,
-				Result:     &resultStr,
-				Confidence: 0.9,
+			var result ToolResult
+			var resultJSON []byte
+
+			if requiresApproval {
+				result = ToolResult{
+					Success: false,
+					Message: "Action requires agent approval before execution",
+				}
+				resultJSON, _ = json.Marshal(result)
+				resultStr := string(resultJSON)
+				action := structs.Action{
+					TicketID:   ticketID,
+					Type:       tc.Name,
+					Params:     tc.Params,
+					Status:     constants.ActionStatusPending,
+					Result:     &resultStr,
+					Confidence: 0.9,
+				}
+				if err := postgre.CreateAction(ctx, &action); err != nil {
+					log.Printf("[ai] save pending action error: %v", err)
+				}
+				allActions = append(allActions, action)
+				log.Printf("[ai] action %s requires approval for ticket %s", tc.Name, ticketID)
+			} else {
+				result = ExecuteTool(ctx, ticketID, tc.Name, tc.Params)
+				resultJSON, _ = json.Marshal(result)
+				resultStr := string(resultJSON)
+				action := structs.Action{
+					TicketID:   ticketID,
+					Type:       tc.Name,
+					Params:     tc.Params,
+					Status:     constants.ActionStatusExecuted,
+					Result:     &resultStr,
+					Confidence: 0.9,
+				}
+				if err := postgre.CreateAction(ctx, &action); err != nil {
+					log.Printf("[ai] save action error: %v", err)
+				}
+				allActions = append(allActions, action)
 			}
-			if err := postgre.CreateAction(ctx, &action); err != nil {
-			log.Printf("[ai] save action error: %v", err)
-		}
-			allActions = append(allActions, action)
 
 			llmMessages = append(llmMessages, LLMMessage{
 				Role: "user",
@@ -197,6 +233,7 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage, lang string)
 				log.Printf("[ai] auto-resolve ticket error: %v", err)
 			} else {
 				log.Printf("[ai] ticket %s auto-resolved after successful actions", ticketID)
+				go GenerateTicketSummary(context.Background(), ticketID)
 			}
 		}
 	}
@@ -267,6 +304,64 @@ func GenerateSuggestion(ctx context.Context, ticketID string) (string, error) {
 
 	log.Printf("[ai] suggestion generated for ticket %s latency=%dms", ticketID, latency)
 	return resp.Text, nil
+}
+
+func GenerateTicketSummary(ctx context.Context, ticketID string) {
+	provider, providerName := GetActiveProvider()
+	if provider == nil {
+		log.Printf("[ai] no provider for summary generation")
+		return
+	}
+
+	history, err := postgre.GetMessagesByTicket(ctx, ticketID)
+	if err != nil {
+		log.Printf("[ai] summary: get messages error: %v", err)
+		return
+	}
+
+	if len(history) == 0 {
+		return
+	}
+
+	var conversation string
+	for _, m := range history {
+		conversation += fmt.Sprintf("[%s]: %s\n", m.Role, m.Content)
+	}
+
+	prompt := fmt.Sprintf(`Summarize this support conversation in 2-3 sentences. Include: what the customer wanted, what actions were taken, and the outcome.
+
+Conversation:
+%s
+
+Return ONLY the summary text, nothing else.`, conversation)
+
+	start := time.Now()
+	resp, err := provider.Chat(ctx, LLMRequest{
+		Messages:  []LLMMessage{{Role: "user", Content: prompt}},
+		MaxTokens: 512,
+	})
+	latency := time.Since(start).Milliseconds()
+
+	LogMetrics(LLMMetrics{
+		Provider:     providerName,
+		Model:        core.GetString(providerName+".model", "unknown"),
+		LatencyMs:    latency,
+		InputTokens:  resp.Usage.InputTokens,
+		OutputTokens: resp.Usage.OutputTokens,
+		Timestamp:    time.Now(),
+	})
+
+	if err != nil {
+		log.Printf("[ai] summary generation error: %v", err)
+		return
+	}
+
+	if err := postgre.UpdateTicketSummary(ctx, ticketID, resp.Text); err != nil {
+		log.Printf("[ai] update summary error: %v", err)
+		return
+	}
+
+	log.Printf("[ai] summary generated for ticket %s latency=%dms", ticketID, latency)
 }
 
 func AnalyzeTicket(ctx context.Context, ticketID, message string) (*structs.AIAnalysis, error) {

@@ -21,7 +21,12 @@ func NewOpenAIProvider() *OpenAIProvider {
 	if apiKey == "" {
 		return nil
 	}
-	c := openai.NewClient(option.WithAPIKey(apiKey))
+	opts := []option.RequestOption{option.WithAPIKey(apiKey)}
+	baseURL := core.GetString("openai.base_url", "")
+	if baseURL != "" {
+		opts = append(opts, option.WithBaseURL(baseURL))
+	}
+	c := openai.NewClient(opts...)
 	return &OpenAIProvider{
 		client: &c,
 		model:  core.GetString("openai.model", "gpt-4o"),

@@ -86,7 +86,7 @@ export default function App() {
           </Route>
 
           <Route path="login" element={<AuthPage />} />
-          <Route path="register" element={<RegisterPage />} />
+          <Route path="register/:token" element={<RegisterPage />} />
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

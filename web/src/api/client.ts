@@ -5,6 +5,21 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+api.interceptors.request.use((config) => {
+  try {
+    const raw = localStorage.getItem('sf-auth-user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      if (user?.company && config.params !== false) {
+        config.params = { ...config.params, company: user.company };
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return config;
+});
+
 export interface ChatRequest {
   ticket_id?: string;
   customer_id: string;
@@ -160,6 +175,40 @@ export const companiesApi = {
   list: () => api.get<{ companies: Company[]; total: number }>('/companies'),
 };
 
+export interface InviteValidation {
+  valid: boolean;
+}
+
+export interface InviteGenerated {
+  token: string;
+  link: string;
+}
+
+export interface RegisterRequest {
+  token: string;
+  name: string;
+  company: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  id: string;
+  email: string;
+  name: string;
+  level: number;
+  role: string;
+  company?: string;
+}
+
+export const inviteApi = {
+  validate: (token: string) => api.get<InviteValidation>(`/invite/${token}`),
+  generate: (createdBy: string) =>
+    api.post<InviteGenerated>('/auth/invite', { created_by: createdBy }),
+  register: (data: RegisterRequest) =>
+    api.post<RegisterResponse>('/auth/register', data),
+};
+
 export interface IntegrationInfo {
   id: string;
   name: string;
@@ -173,6 +222,21 @@ export const integrationsApi = {
     api.post<{ status: string; id: string }>('/integrations/connect', { type, config }),
   disconnect: (id: string) =>
     api.post('/integrations/disconnect', { id }),
+};
+
+export interface KBEntry {
+  id: string;
+  company: string;
+  question: string;
+  answer: string;
+  created_at: string;
+}
+
+export const knowledgeApi = {
+  list: () => api.get<KBEntry[]>('/knowledge'),
+  create: (company: string, question: string, answer: string) =>
+    api.post<KBEntry>('/knowledge', { company, question, answer }),
+  remove: (id: string) => api.delete(`/knowledge/${id}`),
 };
 
 export default api;

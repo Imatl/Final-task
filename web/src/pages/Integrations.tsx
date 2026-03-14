@@ -6,20 +6,18 @@ import {
   Mail,
   Globe,
   ShoppingBag,
-  Send,
   Loader2,
   CheckCircle,
   Copy,
   ExternalLink,
   Plug,
   Code,
-  Zap,
   Power,
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui';
-import { chatApi, integrationsApi } from '@/api/client';
+import { integrationsApi } from '@/api/client';
 
 interface ChannelDef {
   id: string;
@@ -218,105 +216,6 @@ function ChannelConfig({ channel, status, onStatusChange }: {
   );
 }
 
-function ApiPlayground() {
-  const { t } = useTranslation();
-  const [channel, setChannel] = useState('telegram');
-  const [message, setMessage] = useState('');
-  const [customerId] = useState('cust-demo');
-  const [response, setResponse] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleSend = async () => {
-    if (!message.trim() || loading) return;
-    setLoading(true);
-    setResponse(null);
-    try {
-      const { data } = await chatApi.send({
-        customer_id: customerId,
-        channel,
-        message: message.trim(),
-      });
-      setResponse(JSON.stringify(data, null, 2));
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setResponse(JSON.stringify({ error: errorMessage }, null, 2));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCopy = () => {
-    if (response) {
-      navigator.clipboard.writeText(response);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <div className="bg-cosmic-800/40 border border-cosmic-700/30 rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-cosmic-700/30 flex items-center gap-2">
-        <Zap className="w-4 h-4 text-neon-violet" />
-        <span className="text-sm font-semibold text-white">{t('integrations.playground')}</span>
-        <span className="text-xs text-gray-500 ml-auto">POST /api/chat</span>
-      </div>
-
-      <div className="p-4 space-y-3">
-        <div className="flex gap-2">
-          {['telegram', 'email', 'web', 'shopify'].map((ch) => (
-            <button
-              key={ch}
-              onClick={() => setChannel(ch)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                channel === ch
-                  ? 'bg-velvet-600 text-white'
-                  : 'bg-cosmic-800 text-gray-400 hover:text-gray-200'
-              )}
-            >
-              {ch}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={t('integrations.messagePlaceholder')}
-            className="flex-1 bg-cosmic-900/80 border border-cosmic-600 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-neon-violet/50 placeholder-gray-500 transition-all"
-            disabled={loading}
-          />
-          <button
-            onClick={handleSend}
-            disabled={loading || !message.trim()}
-            className="bg-velvet-600 text-white rounded-lg px-4 py-2 hover:bg-velvet-500 disabled:opacity-50 transition-all"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {response && (
-          <div className="relative">
-            <button
-              onClick={handleCopy}
-              className="absolute top-2 right-2 p-1.5 rounded-md bg-cosmic-700/50 text-gray-400 hover:text-white transition-colors"
-            >
-              {copied ? <CheckCircle className="w-3.5 h-3.5 text-neon-green" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-            <pre className="bg-cosmic-900/80 border border-cosmic-700/30 rounded-lg p-3 text-xs text-neon-green font-mono overflow-x-auto max-h-64 overflow-y-auto">
-              {response}
-            </pre>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function IntegrationsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -405,8 +304,6 @@ export function IntegrationsPage() {
             </pre>
           </div>
         </div>
-
-        <ApiPlayground />
 
         <div>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('integrations.howItWorks')}</h2>

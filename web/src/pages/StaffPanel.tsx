@@ -49,11 +49,13 @@ function AgentRow({ agent }: { agent: AgentPerformance }) {
 export function StaffPanelPage() {
   const { t } = useTranslation();
 
-  const { data: agents = [], isLoading: loadingAgents } = useQuery({
+  const { data: rawAgents, isLoading: loadingAgents } = useQuery({
     queryKey: ['analytics-agents'],
     queryFn: () => analyticsApi.agents().then((r) => r.data),
     refetchInterval: 30_000,
   });
+
+  const agents = rawAgents ?? [];
 
   const { data: overview, isLoading: loadingOverview } = useQuery({
     queryKey: ['analytics-overview'],

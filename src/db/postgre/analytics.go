@@ -7,33 +7,42 @@ import (
 	"supportflow/core/structs"
 )
 
-func GetAnalyticsOverview(ctx context.Context) (*structs.AnalyticsOverview, error) {
+func GetAnalyticsOverview(ctx context.Context, company string) (*structs.AnalyticsOverview, error) {
 	a := &structs.AnalyticsOverview{
 		ByCategory:  make(map[string]int),
 		ByPriority:  make(map[string]int),
 		BySentiment: make(map[string]int),
 	}
 
-	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets`).Scan(&a.TotalTickets); err != nil {
+	companyFilter := ""
+	companyJoinFilter := ""
+	args := []any{}
+	if company != "" {
+		companyFilter = " AND company = $1"
+		companyJoinFilter = " AND t.company = $1"
+		args = append(args, company)
+	}
+
+	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE 1=1`+companyFilter, args...).Scan(&a.TotalTickets); err != nil {
 		log.Printf("[db] count tickets error: %v", err)
 	}
-	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('open','in_progress','waiting')`).Scan(&a.OpenTickets); err != nil {
+	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('open','in_progress','waiting')`+companyFilter, args...).Scan(&a.OpenTickets); err != nil {
 		log.Printf("[db] count open tickets error: %v", err)
 	}
 	if err := Pool.QueryRow(ctx,
 		`SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (closed_at - created_at)) / 60), 0)
-		 FROM supportflow.tickets WHERE closed_at IS NOT NULL`,
+		 FROM supportflow.tickets WHERE closed_at IS NOT NULL`+companyFilter, args...,
 	).Scan(&a.AvgResolveTime); err != nil {
 		log.Printf("[db] avg resolve time error: %v", err)
 	}
 
 	var autoResolved, totalResolved int
-	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('resolved','closed')`).Scan(&totalResolved); err != nil {
+	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('resolved','closed')`+companyFilter, args...).Scan(&totalResolved); err != nil {
 		log.Printf("[db] count resolved error: %v", err)
 	}
 	if err := Pool.QueryRow(ctx,
 		`SELECT COUNT(*) FROM supportflow.tickets t
-		 WHERE t.status IN ('resolved','closed') AND t.agent_id IS NULL`,
+		 WHERE t.status IN ('resolved','closed') AND t.agent_id IS NULL`+companyJoinFilter, args...,
 	).Scan(&autoResolved); err != nil {
 		log.Printf("[db] count auto-resolved error: %v", err)
 	}
@@ -41,7 +50,7 @@ func GetAnalyticsOverview(ctx context.Context) (*structs.AnalyticsOverview, erro
 		a.AutoResolveRate = float64(autoResolved) / float64(totalResolved)
 	}
 
-	rows, err := Pool.Query(ctx, `SELECT category, COUNT(*) FROM supportflow.tickets GROUP BY category`)
+	rows, err := Pool.Query(ctx, `SELECT category, COUNT(*) FROM supportflow.tickets WHERE 1=1`+companyFilter+` GROUP BY category`, args...)
 	if err != nil {
 		log.Printf("[db] query by category error: %v", err)
 	}
@@ -57,7 +66,7 @@ func GetAnalyticsOverview(ctx context.Context) (*structs.AnalyticsOverview, erro
 		}
 	}
 
-	rows2, err := Pool.Query(ctx, `SELECT priority, COUNT(*) FROM supportflow.tickets GROUP BY priority`)
+	rows2, err := Pool.Query(ctx, `SELECT priority, COUNT(*) FROM supportflow.tickets WHERE 1=1`+companyFilter+` GROUP BY priority`, args...)
 	if err != nil {
 		log.Printf("[db] query by priority error: %v", err)
 	}
@@ -73,7 +82,14 @@ func GetAnalyticsOverview(ctx context.Context) (*structs.AnalyticsOverview, erro
 		}
 	}
 
-	rows3, err := Pool.Query(ctx, `SELECT sentiment, COUNT(*) FROM supportflow.ai_analyses GROUP BY sentiment`)
+	sentimentQuery := `SELECT sentiment, COUNT(*) FROM supportflow.ai_analyses`
+	if company != "" {
+		sentimentQuery = `SELECT aa.sentiment, COUNT(*) FROM supportflow.ai_analyses aa
+		 JOIN supportflow.tickets t ON t.id = aa.ticket_id WHERE t.company = $1 GROUP BY aa.sentiment`
+	} else {
+		sentimentQuery += ` GROUP BY sentiment`
+	}
+	rows3, err := Pool.Query(ctx, sentimentQuery, args...)
 	if err != nil {
 		log.Printf("[db] query by sentiment error: %v", err)
 	}
@@ -92,16 +108,21 @@ func GetAnalyticsOverview(ctx context.Context) (*structs.AnalyticsOverview, erro
 	return a, nil
 }
 
-func GetAgentPerformance(ctx context.Context) ([]structs.AgentPerformance, error) {
-	rows, err := Pool.Query(ctx,
-		`SELECT a.id, a.name,
+func GetAgentPerformance(ctx context.Context, company string) ([]structs.AgentPerformance, error) {
+	query := `SELECT a.id, a.name,
 			COUNT(t.id) AS tickets_resolved,
 			COALESCE(AVG(EXTRACT(EPOCH FROM (t.closed_at - t.created_at)) / 60), 0) AS avg_resolve_time
 		 FROM supportflow.agents a
-		 LEFT JOIN supportflow.tickets t ON t.agent_id = a.id AND t.status IN ('resolved','closed')
-		 GROUP BY a.id, a.name
-		 ORDER BY tickets_resolved DESC`,
-	)
+		 LEFT JOIN supportflow.tickets t ON t.agent_id = a.id AND t.status IN ('resolved','closed')`
+
+	args := []any{}
+	if company != "" {
+		query += ` WHERE a.company = $1`
+		args = append(args, company)
+	}
+	query += ` GROUP BY a.id, a.name ORDER BY tickets_resolved DESC`
+
+	rows, err := Pool.Query(ctx, query, args...)
 	if err != nil {
 		log.Printf("[db] agent performance query error: %v", err)
 		return nil, err

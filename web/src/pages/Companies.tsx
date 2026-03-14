@@ -1,7 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Building2, Users, TrendingUp } from 'lucide-react';
-import { companiesApi, type Company } from '@/api/client';
+import { Building2, Users, TrendingUp, UserPlus, Copy, Check } from 'lucide-react';
+import { companiesApi, inviteApi, type Company } from '@/api/client';
+import { useAuthStore } from '@/store/auth';
+import { cn } from '@/lib/cn';
 
 function fmt(n: number) {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -34,6 +37,91 @@ function CompanyRow({ company }: { company: Company }) {
   );
 }
 
+function InvitePanel() {
+  const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: () => inviteApi.generate(user!.id),
+    onSuccess: (res) => {
+      const fullLink = window.location.origin + res.data.link;
+      setGeneratedLink(fullLink);
+    },
+  });
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(generatedLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const inputClass = cn(
+    'w-full bg-cosmic-800/80 border border-cosmic-700/80 text-white rounded-xl px-4 py-2.5 text-sm',
+    'placeholder-gray-600 transition-all duration-200',
+    'focus:outline-none focus:border-neon-violet/50 focus:ring-2 focus:ring-neon-violet/10'
+  );
+
+  return (
+    <div className="bg-cosmic-900/80 border border-cosmic-700/50 rounded-xl p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-neon-violet/10 border border-neon-violet/20 flex items-center justify-center">
+            <UserPlus className="w-4.5 h-4.5 text-neon-violet" />
+          </div>
+          <h3 className="text-sm font-semibold text-white">{t('companies.generateInvite')}</h3>
+        </div>
+        <button
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+          className={cn(
+            'px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200',
+            'bg-gradient-to-r from-velvet-600 to-neon-violet text-white',
+            'hover:opacity-90 active:scale-[0.98]',
+            'disabled:opacity-40 disabled:cursor-not-allowed',
+            mutation.isPending && 'animate-pulse'
+          )}
+        >
+          {t('companies.generateBtn')}
+        </button>
+      </div>
+
+      {generatedLink && (
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-gray-400">
+            {t('companies.inviteLinkLabel')}
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={generatedLink}
+              readOnly
+              className={cn(inputClass, 'flex-1 opacity-80 cursor-default')}
+            />
+            <button
+              onClick={handleCopy}
+              className={cn(
+                'px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5',
+                copied
+                  ? 'bg-neon-green/20 border border-neon-green/30 text-neon-green'
+                  : 'bg-cosmic-800/80 border border-cosmic-700/80 text-gray-300 hover:text-white hover:border-cosmic-600/80'
+              )}
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? t('companies.copied') : t('companies.copyLink')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {mutation.isError && (
+        <p className="text-sm text-red-400">{t('companies.error')}</p>
+      )}
+    </div>
+  );
+}
+
 export function CompaniesPage() {
   const { t } = useTranslation();
 
@@ -54,6 +142,8 @@ export function CompaniesPage() {
         <h1 className="text-2xl font-bold text-white">{t('companies.title')}</h1>
         <p className="text-sm text-gray-400 mt-1">{t('companies.subtitle')}</p>
       </div>
+
+      <InvitePanel />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-cosmic-900/80 border border-cosmic-700/50 rounded-xl p-6">

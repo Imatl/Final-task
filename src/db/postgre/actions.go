@@ -16,6 +16,18 @@ func CreateAction(ctx context.Context, a *structs.Action) error {
 	).Scan(&a.ID, &a.CreatedAt)
 }
 
+func GetAction(ctx context.Context, id string) (*structs.Action, error) {
+	a := &structs.Action{}
+	err := Pool.QueryRow(ctx,
+		`SELECT id, ticket_id, type, params, status, result, confidence, created_at, executed_at
+		 FROM supportflow.actions WHERE id = $1`, id,
+	).Scan(&a.ID, &a.TicketID, &a.Type, &a.Params, &a.Status, &a.Result, &a.Confidence, &a.CreatedAt, &a.ExecutedAt)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
 func GetActionsByTicket(ctx context.Context, ticketID string) ([]structs.Action, error) {
 	rows, err := Pool.Query(ctx,
 		`SELECT id, ticket_id, type, params, status, result, confidence, created_at, executed_at
@@ -39,7 +51,7 @@ func GetActionsByTicket(ctx context.Context, ticketID string) ([]structs.Action,
 
 func UpdateActionStatus(ctx context.Context, id, status, result string) error {
 	var executedAt *time.Time
-	if status == "executed" {
+	if status == "executed" || status == "approved" {
 		now := time.Now()
 		executedAt = &now
 	}

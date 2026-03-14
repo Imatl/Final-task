@@ -121,7 +121,11 @@
     "createAccount": "Створіть акаунт",
     "tagline": "AI-підтримка для вашої команди",
     "continueGoogle": "Продовжити з Google",
-    "orEmail": "або через email",
+    "signUpGoogle": "Зареєструватися через Google",
+    "orEmail": "або увійти через email",
+    "orManual": "або заповніть вручну",
+    "googleLinked": "Google акаунт підключено",
+    "googleFailed": "Помилка входу через Google",
     "fullName": "Ім'я та прізвище",
     "fullNamePlaceholder": "Іван Іваненко",
     "company": "Компанія",
@@ -129,17 +133,19 @@
     "email": "Email",
     "password": "Пароль",
     "confirmPassword": "Підтвердити пароль",
-    "forgotPassword": "Забули пароль?",
     "signIn": "Увійти",
     "signUp": "Зареєструватися",
     "noAccount": "Ще немає акаунту?",
     "hasAccount": "Вже є акаунт?",
     "toSignUp": "Зареєструватися",
     "toSignIn": "Увійти",
-    "invalidCredentials": "Невірний email або пароль",
     "passwordMismatch": "Паролі не збігаються",
-    "registrationSent": "Запит надіслано",
-    "registrationPending": "Ваш запит на реєстрацію надіслано адміністратору для підтвердження."
+    "invalidCredentials": "Невірний email або пароль",
+    "registrationSent": "Акаунт створено",
+    "registrationPending": "Ваш акаунт створено. Тепер ви можете увійти.",
+    "invalidToken": "Це посилання недійсне або закінчився термін дії",
+    "emailTaken": "Акаунт з цим email вже існує",
+    "registrationFailed": "Помилка реєстрації. Спробуйте ще раз."
   },
   "staffPanel": {
     "title": "Персонал",
@@ -161,7 +167,14 @@
     "colPlan": "Тариф",
     "colStaff": "Співробітники",
     "colAiSpend": "Витрати AI (USD)",
-    "error": "Не вдалося завантажити компанії"
+    "error": "Не вдалося завантажити компанії",
+    "generateInvite": "Запросити адміна компанії",
+    "inviteCompanyLabel": "Назва компанії",
+    "inviteCompanyPlaceholder": "Введіть назву компанії",
+    "generateBtn": "Згенерувати посилання",
+    "inviteLinkLabel": "Посилання для запрошення",
+    "copied": "Скопійовано",
+    "copyLink": "Копіювати"
   },
   "settings": {
     "title": "Налаштування та продуктивність",
@@ -179,6 +192,10 @@
     "tools": "Інструменти",
     "errorCol": "Помилка",
     "noData": "Даних поки немає",
-    "active": "активний"
+    "active": "активний",
+    "knowledgeBase": "База знань",
+    "kbQuestionPlaceholder": "Питання (напр. Яка ваша політика повернення?)",
+    "kbAnswerPlaceholder": "Відповідь",
+    "kbAdd": "Додати запис"
   }
 }

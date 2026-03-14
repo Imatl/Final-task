@@ -11,10 +11,10 @@ import (
 
 func CreateTicket(ctx context.Context, t *structs.Ticket) error {
 	return Pool.QueryRow(ctx,
-		`INSERT INTO supportflow.tickets (customer_id, subject, channel, status, priority, category)
-		 VALUES ($1, $2, $3, $4, $5, $6)
+		`INSERT INTO supportflow.tickets (customer_id, subject, channel, status, priority, category, company)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)
 		 RETURNING id, created_at, updated_at`,
-		t.CustomerID, t.Subject, t.Channel, t.Status, t.Priority, t.Category,
+		t.CustomerID, t.Subject, t.Channel, t.Status, t.Priority, t.Category, t.Company,
 	).Scan(&t.ID, &t.CreatedAt, &t.UpdatedAt)
 }
 
@@ -24,9 +24,9 @@ func GetTicket(ctx context.Context, id string) (*structs.Ticket, error) {
 	}
 	t := &structs.Ticket{}
 	err := Pool.QueryRow(ctx,
-		`SELECT id, customer_id, subject, channel, status, priority, category, agent_id, ai_summary, created_at, updated_at, closed_at
+		`SELECT id, customer_id, subject, channel, status, priority, category, agent_id, ai_summary, company, created_at, updated_at, closed_at
 		 FROM supportflow.tickets WHERE id = $1`, id,
-	).Scan(&t.ID, &t.CustomerID, &t.Subject, &t.Channel, &t.Status, &t.Priority, &t.Category, &t.AgentID, &t.AISummary, &t.CreatedAt, &t.UpdatedAt, &t.ClosedAt)
+	).Scan(&t.ID, &t.CustomerID, &t.Subject, &t.Channel, &t.Status, &t.Priority, &t.Category, &t.AgentID, &t.AISummary, &t.Company, &t.CreatedAt, &t.UpdatedAt, &t.ClosedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +90,11 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 		args = append(args, f.Category)
 		idx++
 	}
+	if f.Company != "" {
+		where = append(where, fmt.Sprintf("company = $%d", idx))
+		args = append(args, f.Company)
+		idx++
+	}
 
 	whereClause := strings.Join(where, " AND ")
 
@@ -106,7 +111,7 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 	offset := f.Offset
 
 	query := fmt.Sprintf(
-		`SELECT id, customer_id, subject, channel, status, priority, category, agent_id, ai_summary, created_at, updated_at, closed_at
+		`SELECT id, customer_id, subject, channel, status, priority, category, agent_id, ai_summary, company, created_at, updated_at, closed_at
 		 FROM supportflow.tickets WHERE %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`,
 		whereClause, idx, idx+1,
 	)
@@ -121,7 +126,7 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 	var tickets []structs.Ticket
 	for rows.Next() {
 		var t structs.Ticket
-		if err := rows.Scan(&t.ID, &t.CustomerID, &t.Subject, &t.Channel, &t.Status, &t.Priority, &t.Category, &t.AgentID, &t.AISummary, &t.CreatedAt, &t.UpdatedAt, &t.ClosedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.CustomerID, &t.Subject, &t.Channel, &t.Status, &t.Priority, &t.Category, &t.AgentID, &t.AISummary, &t.Company, &t.CreatedAt, &t.UpdatedAt, &t.ClosedAt); err != nil {
 			return nil, 0, err
 		}
 		tickets = append(tickets, t)

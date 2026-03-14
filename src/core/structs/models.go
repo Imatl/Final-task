@@ -8,6 +8,7 @@ type Customer struct {
 	Email     string    `json:"email"`
 	Phone     *string   `json:"phone,omitempty"`
 	Plan      string    `json:"plan"`
+	Company   *string   `json:"company,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -21,6 +22,7 @@ type Ticket struct {
 	Category   string     `json:"category"`
 	AgentID    *string    `json:"agent_id,omitempty"`
 	AISummary  *string    `json:"ai_summary,omitempty"`
+	Company    *string    `json:"company,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 	ClosedAt   *time.Time `json:"closed_at,omitempty"`
@@ -52,6 +54,7 @@ type Agent struct {
 	Email     string    `json:"email"`
 	Role      string    `json:"role"`
 	IsOnline  bool      `json:"is_online"`
+	Company   *string   `json:"company,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -63,4 +66,24 @@ type AIAnalysis struct {
 	SuggestedTools []string `json:"suggested_tools"`
 	Reasoning      string   `json:"reasoning"`
 	Confidence     float64  `json:"confidence"`
+}
+
+type User struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	GoogleSub *string   `json:"google_sub,omitempty"`
+	Password  *string   `json:"-"`
+	Level     int       `json:"level"`
+	Role      string    `json:"role"`
+	Company   *string   `json:"company,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type KBEntry struct {
+	ID        string    `json:"id"`
+	Company   string    `json:"company"`
+	Question  string    `json:"question"`
+	Answer    string    `json:"answer"`
+	CreatedAt time.Time `json:"created_at"`
 }

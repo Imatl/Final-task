@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import api from '@/api/client';
 
 export type UserLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -8,6 +9,7 @@ export interface AuthUser {
   name: string;
   level: UserLevel;
   role: string;
+  company?: string;
 }
 
 export const ROLE_LABELS: Record<UserLevel, string> = {
@@ -18,29 +20,11 @@ export const ROLE_LABELS: Record<UserLevel, string> = {
   5: 'Owner',
 };
 
-const HARDCODED_USERS: Array<AuthUser & { password: string }> = [
-  {
-    id: 'admin-001',
-    email: 'admin@test.com',
-    password: 'password123',
-    name: 'Admin User',
-    level: 5,
-    role: 'Owner',
-  },
-];
-
 function loadUser(): AuthUser | null {
   try {
     const raw = localStorage.getItem('sf-auth-user');
     if (!raw) return null;
-    const cached = JSON.parse(raw) as AuthUser;
-    const source = HARDCODED_USERS.find((u) => u.email === cached.email);
-    if (source) {
-      const synced: AuthUser = { ...cached, level: source.level, role: source.role };
-      localStorage.setItem('sf-auth-user', JSON.stringify(synced));
-      return synced;
-    }
-    return cached;
+    return JSON.parse(raw) as AuthUser;
   } catch {
     return null;
   }
@@ -56,34 +40,50 @@ function saveUser(user: AuthUser | null) {
 
 interface AuthState {
   user: AuthUser | null;
-  login: (email: string, password: string) => boolean;
-  loginWithGoogle: (googleUser: { email: string; name: string; sub: string }) => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: (backendUser: AuthUser) => void;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: loadUser(),
-  login: (email: string, password: string) => {
-    const found = HARDCODED_USERS.find(
-      (u) => u.email === email && u.password === password
-    );
-    if (found) {
-      const { password: _p, ...user } = found;
+  login: async (email: string, password: string) => {
+    console.log('[Auth] Login attempt for:', email);
+    try {
+      const { data } = await api.post<AuthUser>('/auth/login', { email, password });
+      console.log('[Auth] Login successful:', data.email);
+      const user: AuthUser = {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        level: (data.level || 1) as UserLevel,
+        role: data.role || ROLE_LABELS[1],
+        company: data.company,
+      };
       saveUser(user);
       set({ user });
       return true;
+    } catch (err) {
+      console.error('[Auth] Login failed:', err);
+      return false;
     }
-    return false;
   },
-  loginWithGoogle: (googleUser) => {
-    const existing = HARDCODED_USERS.find((u) => u.email === googleUser.email);
-    const user: AuthUser = existing
-      ? { id: existing.id, email: existing.email, name: existing.name, level: existing.level, role: existing.role }
-      : { id: `google-${googleUser.sub}`, email: googleUser.email, name: googleUser.name, level: 1, role: ROLE_LABELS[1] };
+  loginWithGoogle: (backendUser: AuthUser) => {
+    console.log('[Auth] Google login for:', backendUser.email);
+    const user: AuthUser = {
+      id: backendUser.id,
+      email: backendUser.email,
+      name: backendUser.name,
+      level: (backendUser.level || 1) as UserLevel,
+      role: backendUser.role || ROLE_LABELS[1],
+      company: backendUser.company,
+    };
     saveUser(user);
     set({ user });
+    console.log('[Auth] User saved to store:', user.id);
   },
   logout: () => {
+    console.log('[Auth] Logging out');
     saveUser(null);
     set({ user: null });
   },

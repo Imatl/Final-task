@@ -18,6 +18,7 @@ type TicketFilter struct {
 	Priority string `json:"priority,omitempty"`
 	AgentID  string `json:"agent_id,omitempty"`
 	Category string `json:"category,omitempty"`
+	Company  string `json:"company,omitempty"`
 	Limit    int    `json:"limit,omitempty"`
 	Offset   int    `json:"offset,omitempty"`
 }
