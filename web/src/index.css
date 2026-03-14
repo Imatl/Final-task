@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cosmic-950: #030108;
+  --color-cosmic-900: #0a0618;
+  --color-cosmic-800: #110d24;
+  --color-cosmic-700: #1a1435;
+  --color-cosmic-600: #2a1d47;
+
+  --color-velvet-900: #2e1065;
+  --color-velvet-800: #3b1483;
+  --color-velvet-700: #4c1d95;
+  --color-velvet-600: #5b21b6;
+  --color-velvet-500: #6d28d9;
+
+  --color-neon-violet: #a855f7;
+  --color-neon-purple: #c084fc;
+  --color-neon-pink: #e879f9;
+  --color-neon-cyan: #22d3ee;
+  --color-neon-blue: #60a5fa;
+  --color-neon-green: #4ade80;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-cosmic-600) transparent;
+}
+
+::selection {
+  background-color: rgba(91, 33, 182, 0.5);
+  color: white;
+}
+
+body {
+  background-color: var(--color-cosmic-950);
+  color: #e5e7eb;
+  font-family: var(--font-sans);
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+}
+
+.neon-glow-sm {
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.2), 0 0 20px rgba(168, 85, 247, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #a855f7, #c084fc, #e879f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-neon {
+  0%, 100% { box-shadow: 0 0 10px rgba(168,85,247,0.3); }
+  50% { box-shadow: 0 0 25px rgba(168,85,247,0.6); }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s ease-in-out infinite;
+}

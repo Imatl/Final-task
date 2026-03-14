@@ -1,0 +1,1 @@
+ALTER TABLE supportflow.tickets ADD COLUMN IF NOT EXISTS channel VARCHAR(50) NOT NULL DEFAULT 'web';

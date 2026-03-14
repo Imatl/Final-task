@@ -1,0 +1,24 @@
+# Go
+src/*.exe
+src/vendor/
+
+# Node
+web/node_modules/
+web/dist/
+
+# Config secrets
+.env
+config/local-application.properties
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
