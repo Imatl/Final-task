@@ -18,7 +18,7 @@ func Init(ctx context.Context) error {
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s&pool_max_conns=%d",
 		core.GetString("db.postgres.username", "postgres"),
-		core.GetString("db.postgres.password", "postgres"),
+		core.GetString("db.postgres.password", ""),
 		core.GetString("db.postgres.host", "localhost"),
 		core.GetString("db.postgres.port", "5432"),
 		core.GetString("db.postgres.database", "supportflow"),
