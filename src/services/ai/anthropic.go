@@ -21,8 +21,13 @@ func NewAnthropicProvider() *AnthropicProvider {
 	if apiKey == "" {
 		return nil
 	}
+	opts := []option.RequestOption{option.WithAPIKey(apiKey)}
+	baseURL := core.GetString("anthropic.base_url", "")
+	if baseURL != "" {
+		opts = append(opts, option.WithBaseURL(baseURL))
+	}
 	return &AnthropicProvider{
-		client: anthropic.NewClient(option.WithAPIKey(apiKey)),
+		client: anthropic.NewClient(opts...),
 		model:  core.GetString("anthropic.model", "claude-sonnet-4-5-20250514"),
 	}
 }

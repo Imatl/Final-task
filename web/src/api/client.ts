@@ -131,6 +131,10 @@ export const ticketsApi = {
   assign: (id: string, agentId: string) => api.put(`/tickets/${id}/assign`, { agent_id: agentId }),
   approveAction: (actionId: string, approved: boolean, agentId: string) =>
     api.post('/tickets/actions/approve', { action_id: actionId, approved, agent_id: agentId }),
+  reply: (id: string, message: string, agentId?: string) =>
+    api.post(`/tickets/${id}/reply`, { message, agent_id: agentId || 'agent-1' }),
+  suggest: (id: string) =>
+    api.post<{ suggestion: string }>(`/tickets/${id}/suggest`),
 };
 
 export const analyticsApi = {

@@ -1,20 +1,26 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ticketsApi } from '@/api/client';
 import type { Ticket } from '@/api/client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Clock,
   AlertCircle,
   CheckCircle,
   User,
+  Bot,
   ChevronRight,
   Globe,
   MessageSquare,
   Mail,
+  Send,
+  Sparkles,
+  Loader2,
+  ArrowLeft,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Card, Badge } from '@/components/ui';
+import { Badge } from '@/components/ui';
 
 const PRIORITY_BADGE: Record<string, 'error' | 'warning' | 'success' | 'default'> = {
   critical: 'error',
@@ -67,77 +73,159 @@ function TicketRow({ ticket, isSelected, onSelect }: { ticket: Ticket; isSelecte
   );
 }
 
-function TicketDetailPanel({ ticketId, onClose }: { ticketId: string; onClose: () => void }) {
+function TicketChatPanel({ ticketId, onClose }: { ticketId: string; onClose: () => void }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['ticket', ticketId],
     queryFn: () => ticketsApi.get(ticketId).then((r) => r.data),
+    refetchInterval: 3000,
   });
 
-  if (isLoading) return <div className="p-6 text-gray-500">Loading...</div>;
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [data?.messages]);
+
+  const handleReply = async () => {
+    if (!replyText.trim() || sending) return;
+    setSending(true);
+    try {
+      await ticketsApi.reply(ticketId, replyText.trim());
+      setReplyText('');
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSuggest = async () => {
+    if (suggesting) return;
+    setSuggesting(true);
+    try {
+      const { data } = await ticketsApi.suggest(ticketId);
+      setReplyText(data.suggestion);
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  if (isLoading) return <div className="flex items-center justify-center h-full text-gray-500"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   if (!data) return null;
 
   const ChannelIcon = CHANNEL_ICONS[data.ticket.channel] || Globe;
 
+  const roleIcon = (role: string) => {
+    if (role === 'customer') return <User className="w-4 h-4 text-white" />;
+    if (role === 'agent') return <Shield className="w-4 h-4 text-white" />;
+    return <Bot className="w-4 h-4 text-white" />;
+  };
+
+  const roleColor = (role: string) => {
+    if (role === 'customer') return 'bg-gradient-to-br from-neon-blue to-neon-cyan';
+    if (role === 'agent') return 'bg-gradient-to-br from-neon-green to-emerald-500';
+    return 'bg-gradient-to-br from-velvet-600 to-neon-violet';
+  };
+
   return (
-    <div className="bg-cosmic-900/80 backdrop-blur-sm border-l border-cosmic-700/50 h-full overflow-y-auto">
-      <div className="p-4 border-b border-cosmic-700/50 flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold text-white">{data.ticket.subject}</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-gray-500 font-mono">{data.ticket.id.slice(0, 8)}</span>
-            <Badge variant="neon"><ChannelIcon className="w-3 h-3 mr-1 inline" />{data.ticket.channel}</Badge>
+    <div className="flex flex-col h-full bg-cosmic-900/80 backdrop-blur-sm border-l border-cosmic-700/50">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-cosmic-700/50 flex items-center gap-3">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-white text-sm truncate">{data.ticket.subject}</h3>
+            <Badge variant={data.ticket.status === 'open' ? 'error' : data.ticket.status === 'resolved' ? 'success' : 'default'} dot>{data.ticket.status}</Badge>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <User className="w-3 h-3 text-gray-500" />
+            <span className="text-xs text-gray-400">{data.customer.name}</span>
+            <span className="text-xs text-gray-600">{data.customer.email}</span>
+            <ChannelIcon className="w-3 h-3 text-gray-500 ml-1" />
+            <Badge variant={PRIORITY_BADGE[data.ticket.priority] || 'default'} className="ml-auto">{data.ticket.priority}</Badge>
           </div>
         </div>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-300 text-xl transition-colors">&times;</button>
       </div>
 
-      <div className="p-4 border-b border-cosmic-700/50">
-        <div className="flex items-center gap-2 mb-2">
-          <User className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-200">{data.customer.name}</span>
-          <span className="text-xs text-gray-500">{data.customer.email}</span>
-          <Badge variant={PRIORITY_BADGE[data.ticket.priority] || 'default'} className="ml-auto">{data.ticket.priority}</Badge>
-        </div>
-        <div className="text-xs text-gray-500">Plan: <span className="text-neon-purple">{data.customer.plan}</span> | Status: {data.ticket.status}</div>
-      </div>
-
-      {data.ticket.ai_summary && (
-        <div className="p-4 border-b border-cosmic-700/50 bg-velvet-900/20">
-          <p className="text-xs font-medium text-neon-violet mb-1">{t('dashboard.aiSummary')}</p>
-          <p className="text-sm text-gray-300">{data.ticket.ai_summary}</p>
-        </div>
-      )}
-
-      <div className="p-4 space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('dashboard.messages')}</p>
-        {data.messages?.map((msg) => (
-          <div key={msg.id} className={cn(
-            'text-sm p-3 rounded-lg border',
-            msg.role === 'customer' ? 'bg-cosmic-800/50 border-cosmic-700/30' :
-            msg.role === 'ai' ? 'bg-velvet-900/20 border-velvet-600/20' :
-            'bg-cosmic-800/30 border-cosmic-700/20'
-          )}>
-            <Badge variant={msg.role === 'ai' ? 'neon' : msg.role === 'customer' ? 'info' : 'success'} className="mb-1">{msg.role}</Badge>
-            <p className="mt-1 text-gray-300">{msg.content}</p>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+        {data.ticket.ai_summary && (
+          <div className="mx-auto max-w-md bg-velvet-900/20 border border-velvet-600/20 rounded-lg px-3 py-2 text-center">
+            <p className="text-xs text-neon-violet">{t('dashboard.aiSummary')}</p>
+            <p className="text-xs text-gray-400 mt-1">{data.ticket.ai_summary}</p>
           </div>
-        ))}
-      </div>
+        )}
 
-      {data.actions && data.actions.length > 0 && (
-        <div className="p-4 border-t border-cosmic-700/50 space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('dashboard.actionsTaken')}</p>
-          {data.actions.map((action) => (
-            <Card key={action.id} variant="glass" className="p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-200">{action.type}</span>
-                <Badge variant={action.status === 'executed' ? 'success' : 'warning'} dot>{action.status}</Badge>
-                <span className="text-xs text-gray-500 ml-auto font-mono">{(action.confidence * 100).toFixed(0)}%</span>
+        {data.messages?.map((msg) => {
+          const isCustomer = msg.role === 'customer';
+          return (
+            <div key={msg.id} className={cn('flex gap-2.5', isCustomer ? '' : 'flex-row-reverse')}>
+              <div className={cn('w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0', roleColor(msg.role))}>
+                {roleIcon(msg.role)}
               </div>
-            </Card>
-          ))}
+              <div className={cn('max-w-[75%]')}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className={cn('text-xs font-medium', isCustomer ? 'text-neon-cyan' : msg.role === 'agent' ? 'text-neon-green' : 'text-neon-purple')}>
+                    {msg.role === 'customer' ? data.customer.name : msg.role === 'agent' ? t('dashboard.agent') : 'AI'}
+                  </span>
+                  <span className="text-xs text-gray-600">
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className={cn(
+                  'rounded-xl px-3.5 py-2.5 text-sm',
+                  isCustomer
+                    ? 'bg-cosmic-800/60 border border-cosmic-700/30 text-gray-300'
+                    : msg.role === 'agent'
+                      ? 'bg-emerald-900/20 border border-emerald-600/20 text-gray-300'
+                      : 'bg-velvet-900/20 border border-velvet-600/20 text-gray-300'
+                )}>
+                  {msg.content}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="flex-shrink-0 p-3 border-t border-cosmic-700/50 bg-cosmic-900/95 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSuggest}
+            disabled={suggesting}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-velvet-900/50 border border-velvet-600/30 text-neon-purple hover:bg-velvet-900/80 hover:border-neon-violet/50 disabled:opacity-50 transition-all"
+          >
+            {suggesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {t('dashboard.aiSuggest')}
+          </button>
+          <textarea
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleReply();
+              }
+            }}
+            placeholder={t('dashboard.replyPlaceholder')}
+            rows={1}
+            className="flex-1 bg-cosmic-800/80 border border-cosmic-600 text-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-neon-violet/50 focus:ring-2 focus:ring-neon-violet/20 placeholder-gray-500 transition-all resize-none"
+            disabled={sending}
+          />
+          <button
+            onClick={handleReply}
+            disabled={sending || !replyText.trim()}
+            className="flex-shrink-0 bg-velvet-600 text-white rounded-lg px-3 py-2 hover:bg-velvet-500 disabled:opacity-50 transition-all shadow-[0_0_20px_rgba(109,40,217,0.3)] hover:shadow-[0_0_30px_rgba(109,40,217,0.5)]"
+          >
+            <Send className="w-4 h-4" />
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -199,7 +287,7 @@ export function AgentDashboardPage() {
 
       {selectedTicket && (
         <div className="w-[40%]">
-          <TicketDetailPanel ticketId={selectedTicket} onClose={() => setSelectedTicket(null)} />
+          <TicketChatPanel ticketId={selectedTicket} onClose={() => setSelectedTicket(null)} />
         </div>
       )}
     </div>

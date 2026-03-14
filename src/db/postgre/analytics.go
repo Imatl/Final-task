@@ -2,6 +2,7 @@ package postgre
 
 import (
 	"context"
+	"log"
 
 	"supportflow/core/structs"
 )
@@ -13,52 +14,77 @@ func GetAnalyticsOverview(ctx context.Context) (*structs.AnalyticsOverview, erro
 		BySentiment: make(map[string]int),
 	}
 
-	Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets`).Scan(&a.TotalTickets)
-	Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('open','in_progress','waiting')`).Scan(&a.OpenTickets)
-	Pool.QueryRow(ctx,
+	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets`).Scan(&a.TotalTickets); err != nil {
+		log.Printf("[db] count tickets error: %v", err)
+	}
+	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('open','in_progress','waiting')`).Scan(&a.OpenTickets); err != nil {
+		log.Printf("[db] count open tickets error: %v", err)
+	}
+	if err := Pool.QueryRow(ctx,
 		`SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (closed_at - created_at)) / 60), 0)
 		 FROM supportflow.tickets WHERE closed_at IS NOT NULL`,
-	).Scan(&a.AvgResolveTime)
+	).Scan(&a.AvgResolveTime); err != nil {
+		log.Printf("[db] avg resolve time error: %v", err)
+	}
 
 	var autoResolved, totalResolved int
-	Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('resolved','closed')`).Scan(&totalResolved)
-	Pool.QueryRow(ctx,
+	if err := Pool.QueryRow(ctx, `SELECT COUNT(*) FROM supportflow.tickets WHERE status IN ('resolved','closed')`).Scan(&totalResolved); err != nil {
+		log.Printf("[db] count resolved error: %v", err)
+	}
+	if err := Pool.QueryRow(ctx,
 		`SELECT COUNT(*) FROM supportflow.tickets t
 		 WHERE t.status IN ('resolved','closed') AND t.agent_id IS NULL`,
-	).Scan(&autoResolved)
+	).Scan(&autoResolved); err != nil {
+		log.Printf("[db] count auto-resolved error: %v", err)
+	}
 	if totalResolved > 0 {
 		a.AutoResolveRate = float64(autoResolved) / float64(totalResolved)
 	}
 
-	rows, _ := Pool.Query(ctx, `SELECT category, COUNT(*) FROM supportflow.tickets GROUP BY category`)
+	rows, err := Pool.Query(ctx, `SELECT category, COUNT(*) FROM supportflow.tickets GROUP BY category`)
+	if err != nil {
+		log.Printf("[db] query by category error: %v", err)
+	}
 	if rows != nil {
 		defer rows.Close()
 		for rows.Next() {
 			var cat string
 			var cnt int
-			rows.Scan(&cat, &cnt)
+			if err := rows.Scan(&cat, &cnt); err != nil {
+				log.Printf("[db] scan category error: %v", err)
+			}
 			a.ByCategory[cat] = cnt
 		}
 	}
 
-	rows2, _ := Pool.Query(ctx, `SELECT priority, COUNT(*) FROM supportflow.tickets GROUP BY priority`)
+	rows2, err := Pool.Query(ctx, `SELECT priority, COUNT(*) FROM supportflow.tickets GROUP BY priority`)
+	if err != nil {
+		log.Printf("[db] query by priority error: %v", err)
+	}
 	if rows2 != nil {
 		defer rows2.Close()
 		for rows2.Next() {
 			var pri string
 			var cnt int
-			rows2.Scan(&pri, &cnt)
+			if err := rows2.Scan(&pri, &cnt); err != nil {
+				log.Printf("[db] scan priority error: %v", err)
+			}
 			a.ByPriority[pri] = cnt
 		}
 	}
 
-	rows3, _ := Pool.Query(ctx, `SELECT sentiment, COUNT(*) FROM supportflow.ai_analyses GROUP BY sentiment`)
+	rows3, err := Pool.Query(ctx, `SELECT sentiment, COUNT(*) FROM supportflow.ai_analyses GROUP BY sentiment`)
+	if err != nil {
+		log.Printf("[db] query by sentiment error: %v", err)
+	}
 	if rows3 != nil {
 		defer rows3.Close()
 		for rows3.Next() {
 			var sent string
 			var cnt int
-			rows3.Scan(&sent, &cnt)
+			if err := rows3.Scan(&sent, &cnt); err != nil {
+				log.Printf("[db] scan sentiment error: %v", err)
+			}
 			a.BySentiment[sent] = cnt
 		}
 	}
@@ -77,6 +103,7 @@ func GetAgentPerformance(ctx context.Context) ([]structs.AgentPerformance, error
 		 ORDER BY tickets_resolved DESC`,
 	)
 	if err != nil {
+		log.Printf("[db] agent performance query error: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -85,6 +112,7 @@ func GetAgentPerformance(ctx context.Context) ([]structs.AgentPerformance, error
 	for rows.Next() {
 		var p structs.AgentPerformance
 		if err := rows.Scan(&p.AgentID, &p.AgentName, &p.TicketsResolved, &p.AvgResolveTime); err != nil {
+			log.Printf("[db] scan agent performance error: %v", err)
 			return nil, err
 		}
 		perfs = append(perfs, p)

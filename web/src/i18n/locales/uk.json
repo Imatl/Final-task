@@ -1,7 +1,7 @@
 {
   "nav": {
-    "chat": "Чат підтримки",
-    "dashboard": "Панель агента",
+    "dashboard": "Дашборд",
+    "integrations": "Інтеграції",
     "analytics": "Аналітика",
     "settings": "Налаштування"
   },
@@ -54,7 +54,11 @@
     "messages": "Повідомлення",
     "actionsTaken": "Виконані дії",
     "aiSummary": "AI Резюме",
-    "ago": "тому"
+    "ago": "тому",
+    "agentReply": "Відповідь агента",
+    "replyPlaceholder": "Напишіть відповідь клієнту...",
+    "aiSuggest": "AI Підказка",
+    "agent": "Агент"
   },
   "analytics": {
     "title": "Аналітика",
@@ -72,6 +76,30 @@
     "quality": "Якість",
     "minutes": "хв",
     "noData": "Даних поки немає"
+  },
+  "integrations": {
+    "title": "Інтеграції",
+    "subtitle": "Один API, будь-який канал. Підключення за хвилини.",
+    "channelsTitle": "Підтримувані канали",
+    "channels": {
+      "telegram": "Telegram",
+      "email": "Email",
+      "web": "Веб-віджет",
+      "shopify": "Shopify"
+    },
+    "active": "підключено",
+    "connect": "доступно",
+    "playground": "API Пісочниця",
+    "messagePlaceholder": "Введіть повідомлення клієнта для тесту...",
+    "requestExample": "Запит",
+    "responseExample": "Відповідь",
+    "howItWorks": "Як це працює",
+    "step1Title": "Отримання",
+    "step1Desc": "Клієнт надсилає повідомлення з будь-якого каналу. Ваша інтеграція передає його в наш API.",
+    "step2Title": "Вирішення",
+    "step2Desc": "AI розуміє намір, знаходить контекст та автоматично виконує дії.",
+    "step3Title": "Відповідь",
+    "step3Desc": "Структурована відповідь з деталями рішення повертається у ваш канал."
   },
   "settings": {
     "title": "Налаштування та продуктивність",

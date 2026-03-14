@@ -1,4 +1,4 @@
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
   LayoutDashboard,
@@ -9,7 +9,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  MessageSquare,
+  Plug,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/i18n';
@@ -24,8 +24,9 @@ export function Sidebar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { to: '/agent/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { to: '/agent/analytics', label: t('nav.analytics'), icon: BarChart3 },
+    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { to: '/integrations', label: t('nav.integrations'), icon: Plug },
+    { to: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
   ];
 
   useEffect(() => {
@@ -59,27 +60,6 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <Link
-          to="/chat"
-          className={cn(
-            'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200',
-            'text-neon-cyan hover:bg-cosmic-700/50 hover:text-neon-cyan',
-            sidebarCollapsed && 'justify-center px-2'
-          )}
-        >
-          <MessageSquare className="w-5 h-5 flex-shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">{t('nav.chat')}</span>}
-        </Link>
-
-        <div className="pt-3 pb-2">
-          {!sidebarCollapsed && (
-            <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              {t('sidebar.management')}
-            </span>
-          )}
-          {sidebarCollapsed && <div className="border-t border-cosmic-700/50 mx-2" />}
-        </div>
-
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -128,7 +108,7 @@ export function Sidebar() {
           )}>
             <button
               onClick={() => {
-                navigate('/agent/settings');
+                navigate('/settings');
                 setIsUserMenuOpen(false);
               }}
               className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-cosmic-700 hover:text-white transition-colors"

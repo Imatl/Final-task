@@ -27,6 +27,8 @@ func Register(r *mux.Router, ctx context.Context) {
 	api.HandleFunc("/tickets/{id}", tickets.HandleGet).Methods("GET")
 	api.HandleFunc("/tickets/{id}/status", tickets.HandleUpdateStatus).Methods("PUT")
 	api.HandleFunc("/tickets/{id}/assign", tickets.HandleAssign).Methods("PUT")
+	api.HandleFunc("/tickets/{id}/reply", tickets.HandleAgentReply).Methods("POST")
+	api.HandleFunc("/tickets/{id}/suggest", tickets.HandleSuggest).Methods("POST")
 	api.HandleFunc("/tickets/actions/approve", tickets.HandleApproveAction).Methods("POST")
 
 	api.HandleFunc("/analytics/overview", analytics.HandleOverview).Methods("GET")

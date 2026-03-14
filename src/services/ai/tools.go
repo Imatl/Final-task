@@ -18,28 +18,32 @@ type ToolResult struct {
 }
 
 func ExecuteTool(ctx context.Context, ticketID, toolName string, paramsJSON string) ToolResult {
-	log.Printf("Executing tool: %s for ticket %s with params: %s", toolName, ticketID, paramsJSON)
+	log.Printf("[tool] executing %s for ticket %s params=%s", toolName, ticketID, paramsJSON)
 
+	var result ToolResult
 	switch toolName {
 	case constants.ActionRefund:
-		return executeRefund(ctx, ticketID, paramsJSON)
+		result = executeRefund(ctx, ticketID, paramsJSON)
 	case constants.ActionChangePlan:
-		return executeChangePlan(ctx, ticketID, paramsJSON)
+		result = executeChangePlan(ctx, ticketID, paramsJSON)
 	case constants.ActionResetPassword:
-		return executeResetPassword(ctx, ticketID, paramsJSON)
+		result = executeResetPassword(ctx, ticketID, paramsJSON)
 	case constants.ActionEscalate:
-		return executeEscalate(ctx, ticketID, paramsJSON)
+		result = executeEscalate(ctx, ticketID, paramsJSON)
 	case constants.ActionSendEmail:
-		return executeSendEmail(ctx, ticketID, paramsJSON)
+		result = executeSendEmail(ctx, ticketID, paramsJSON)
 	case constants.ActionCancelSub:
-		return executeCancelSub(ctx, ticketID, paramsJSON)
+		result = executeCancelSub(ctx, ticketID, paramsJSON)
 	case "lookup_billing":
-		return executeLookupBilling(ctx, ticketID, paramsJSON)
+		result = executeLookupBilling(ctx, ticketID, paramsJSON)
 	case "lookup_customer":
-		return executeLookupCustomer(ctx, ticketID, paramsJSON)
+		result = executeLookupCustomer(ctx, ticketID, paramsJSON)
 	default:
-		return ToolResult{Success: false, Message: fmt.Sprintf("unknown tool: %s", toolName)}
+		result = ToolResult{Success: false, Message: fmt.Sprintf("unknown tool: %s", toolName)}
 	}
+
+	log.Printf("[tool] %s result: success=%v message=%s", toolName, result.Success, result.Message)
+	return result
 }
 
 func executeRefund(ctx context.Context, ticketID, paramsJSON string) ToolResult {
@@ -47,7 +51,9 @@ func executeRefund(ctx context.Context, ticketID, paramsJSON string) ToolResult 
 		Amount float64 `json:"amount"`
 		Reason string  `json:"reason"`
 	}
-	json.Unmarshal([]byte(paramsJSON), &p)
+	if err := json.Unmarshal([]byte(paramsJSON), &p); err != nil {
+		log.Printf("[tool] refund unmarshal error: %v", err)
+	}
 
 	return ToolResult{
 		Success: true,
@@ -60,15 +66,19 @@ func executeChangePlan(ctx context.Context, ticketID, paramsJSON string) ToolRes
 	var p struct {
 		NewPlan string `json:"new_plan"`
 	}
-	json.Unmarshal([]byte(paramsJSON), &p)
+	if err := json.Unmarshal([]byte(paramsJSON), &p); err != nil {
+		log.Printf("[tool] change_plan unmarshal error: %v", err)
+	}
 
 	ticket, err := postgre.GetTicket(ctx, ticketID)
 	if err != nil {
+		log.Printf("[tool] change_plan get ticket error: %v", err)
 		return ToolResult{Success: false, Message: "ticket not found"}
 	}
 
 	customer, err := postgre.GetCustomer(ctx, ticket.CustomerID)
 	if err != nil {
+		log.Printf("[tool] change_plan get customer error: %v", err)
 		return ToolResult{Success: false, Message: "customer not found"}
 	}
 
@@ -90,14 +100,22 @@ func executeEscalate(ctx context.Context, ticketID, paramsJSON string) ToolResul
 		Reason   string `json:"reason"`
 		Priority string `json:"priority"`
 	}
-	json.Unmarshal([]byte(paramsJSON), &p)
+	if err := json.Unmarshal([]byte(paramsJSON), &p); err != nil {
+		log.Printf("[tool] escalate unmarshal error: %v", err)
+	}
 
 	priority := p.Priority
 	if priority == "" {
 		priority = constants.PriorityHigh
 	}
 
-	postgre.UpdateTicketStatus(ctx, ticketID, constants.TicketStatusWaiting)
+	if err := postgre.UpdateTicketStatus(ctx, ticketID, constants.TicketStatusWaiting); err != nil {
+		log.Printf("[tool] escalate update status error: %v", err)
+		return ToolResult{
+			Success: false,
+			Message: fmt.Sprintf("failed to escalate: %v", err),
+		}
+	}
 
 	return ToolResult{
 		Success: true,
@@ -110,7 +128,9 @@ func executeSendEmail(ctx context.Context, ticketID, paramsJSON string) ToolResu
 		Subject string `json:"subject"`
 		Body    string `json:"body"`
 	}
-	json.Unmarshal([]byte(paramsJSON), &p)
+	if err := json.Unmarshal([]byte(paramsJSON), &p); err != nil {
+		log.Printf("[tool] send_email unmarshal error: %v", err)
+	}
 
 	return ToolResult{
 		Success: true,
@@ -128,9 +148,14 @@ func executeCancelSub(ctx context.Context, ticketID, paramsJSON string) ToolResu
 func executeLookupBilling(ctx context.Context, ticketID, paramsJSON string) ToolResult {
 	ticket, err := postgre.GetTicket(ctx, ticketID)
 	if err != nil {
+		log.Printf("[tool] lookup_billing get ticket error: %v", err)
 		return ToolResult{Success: false, Message: "ticket not found"}
 	}
-	customer, _ := postgre.GetCustomer(ctx, ticket.CustomerID)
+	customer, err := postgre.GetCustomer(ctx, ticket.CustomerID)
+	if err != nil {
+		log.Printf("[tool] lookup_billing get customer error: %v", err)
+		return ToolResult{Success: false, Message: "customer not found"}
+	}
 
 	billing := map[string]any{
 		"customer":       customer.Name,
@@ -156,10 +181,12 @@ func executeLookupBilling(ctx context.Context, ticketID, paramsJSON string) Tool
 func executeLookupCustomer(ctx context.Context, ticketID, paramsJSON string) ToolResult {
 	ticket, err := postgre.GetTicket(ctx, ticketID)
 	if err != nil {
+		log.Printf("[tool] lookup_customer get ticket error: %v", err)
 		return ToolResult{Success: false, Message: "ticket not found"}
 	}
 	customer, err := postgre.GetCustomer(ctx, ticket.CustomerID)
 	if err != nil {
+		log.Printf("[tool] lookup_customer get customer error: %v", err)
 		return ToolResult{Success: false, Message: "customer not found"}
 	}
 
@@ -167,13 +194,13 @@ func executeLookupCustomer(ctx context.Context, ticketID, paramsJSON string) Too
 		Success: true,
 		Message: "Customer info retrieved",
 		Data: map[string]any{
-			"id":         customer.ID,
-			"name":       customer.Name,
-			"email":      customer.Email,
-			"plan":       customer.Plan,
-			"created_at": customer.CreatedAt,
-			"tickets_count": 3,
-			"lifetime_value": "$149.85",
+			"id":              customer.ID,
+			"name":            customer.Name,
+			"email":           customer.Email,
+			"plan":            customer.Plan,
+			"created_at":      customer.CreatedAt,
+			"tickets_count":   3,
+			"lifetime_value":  "$149.85",
 		},
 	}
 }

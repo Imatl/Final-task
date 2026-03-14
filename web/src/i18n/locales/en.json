@@ -1,7 +1,7 @@
 {
   "nav": {
-    "chat": "Customer Chat",
-    "dashboard": "Agent Dashboard",
+    "dashboard": "Dashboard",
+    "integrations": "Integrations",
     "analytics": "Analytics",
     "settings": "Settings"
   },
@@ -54,7 +54,11 @@
     "messages": "Messages",
     "actionsTaken": "Actions Taken",
     "aiSummary": "AI Summary",
-    "ago": "ago"
+    "ago": "ago",
+    "agentReply": "Agent Reply",
+    "replyPlaceholder": "Write a reply to the customer...",
+    "aiSuggest": "AI Suggest",
+    "agent": "Agent"
   },
   "analytics": {
     "title": "Analytics",
@@ -72,6 +76,30 @@
     "quality": "Quality",
     "minutes": "min",
     "noData": "No data yet"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "One API, any channel. Connect in minutes.",
+    "channelsTitle": "Supported Channels",
+    "channels": {
+      "telegram": "Telegram",
+      "email": "Email",
+      "web": "Web Widget",
+      "shopify": "Shopify"
+    },
+    "active": "connected",
+    "connect": "available",
+    "playground": "API Playground",
+    "messagePlaceholder": "Type a customer message to test...",
+    "requestExample": "Request",
+    "responseExample": "Response",
+    "howItWorks": "How It Works",
+    "step1Title": "Receive",
+    "step1Desc": "Customer sends a message from any channel. Your integration forwards it to our API.",
+    "step2Title": "Resolve",
+    "step2Desc": "AI understands intent, looks up context, and executes actions automatically.",
+    "step3Title": "Respond",
+    "step3Desc": "Structured response with resolution details sent back to your channel."
   },
   "settings": {
     "title": "Settings & Performance",

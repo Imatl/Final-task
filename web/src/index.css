@@ -93,6 +93,21 @@ body {
   animation: float 6s ease-in-out infinite;
 }
 
+@keyframes thinking-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.thinking-dots span {
+  animation: thinking-bounce 1.4s ease-in-out infinite;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

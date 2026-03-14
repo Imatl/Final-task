@@ -1,34 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Zap, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Send, Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store/chat';
 import { chatApi } from '@/api/client';
-import type { Action } from '@/api/client';
 import { cn } from '@/lib/cn';
-import { Badge } from '@/components/ui';
 
-function ActionCard({ action }: { action: Action }) {
-  const { t } = useTranslation();
-  const result = action.result ? JSON.parse(action.result) : null;
-  const label = t(`chat.actionLabels.${action.type}`, { defaultValue: action.type });
-
+function ThinkingIndicator() {
   return (
-    <div className="mt-2 bg-velvet-900/30 border border-velvet-600/30 rounded-lg p-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-neon-purple">
-        <Zap className="w-4 h-4 text-neon-violet" />
-        {label}
-        {result?.success ? (
-          <CheckCircle className="w-4 h-4 text-neon-green ml-auto" />
-        ) : (
-          <AlertTriangle className="w-4 h-4 text-red-400 ml-auto" />
-        )}
-      </div>
-      {result?.message && (
-        <p className="text-xs text-gray-400 mt-1">{result.message}</p>
-      )}
-      <div className="text-xs text-gray-500 mt-1 font-mono">
-        confidence: {(action.confidence * 100).toFixed(0)}%
+    <div className="flex items-center gap-1.5 py-1">
+      <div className="thinking-dots flex gap-1">
+        <span className="w-2 h-2 rounded-full bg-neon-violet/80" style={{ animationDelay: '0ms' }} />
+        <span className="w-2 h-2 rounded-full bg-neon-purple/80" style={{ animationDelay: '150ms' }} />
+        <span className="w-2 h-2 rounded-full bg-neon-pink/80" style={{ animationDelay: '300ms' }} />
       </div>
     </div>
   );
@@ -144,30 +128,11 @@ export function CustomerChatPage() {
                 : 'bg-cosmic-800/80 border border-cosmic-700/50 backdrop-blur-sm'
             )}>
               {msg.isLoading ? (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Loader2 className="w-4 h-4 animate-spin text-neon-violet" />
-                  <span className="text-sm animate-shimmer">{t('chat.thinking')}</span>
-                </div>
+                <ThinkingIndicator />
               ) : (
-                <>
-                  <div className="text-sm prose prose-sm prose-invert max-w-none">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  </div>
-                  {msg.actions && msg.actions.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {msg.actions.map((action) => (
-                        <ActionCard key={action.id} action={action} />
-                      ))}
-                    </div>
-                  )}
-                  {msg.analysis && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      <Badge variant="neon">{msg.analysis.intent}</Badge>
-                      <Badge variant={msg.analysis.sentiment === 'angry' ? 'error' : msg.analysis.sentiment === 'negative' ? 'warning' : 'success'}>{msg.analysis.sentiment}</Badge>
-                      <Badge variant={msg.analysis.urgency === 'high' ? 'error' : msg.analysis.urgency === 'low' ? 'success' : 'warning'}>{msg.analysis.urgency}</Badge>
-                    </div>
-                  )}
-                </>
+                <div className="text-sm prose prose-sm prose-invert max-w-none">
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                </div>
               )}
             </div>
           </div>

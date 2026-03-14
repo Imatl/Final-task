@@ -19,7 +19,7 @@ type Ticket struct {
 	Priority   string     `json:"priority"`
 	Category   string     `json:"category"`
 	AgentID    *string    `json:"agent_id,omitempty"`
-	AISummary  string     `json:"ai_summary,omitempty"`
+	AISummary  *string    `json:"ai_summary,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 	ClosedAt   *time.Time `json:"closed_at,omitempty"`
@@ -39,7 +39,7 @@ type Action struct {
 	Type       string     `json:"type"`
 	Params     string     `json:"params"`
 	Status     string     `json:"status"`
-	Result     string     `json:"result,omitempty"`
+	Result     *string    `json:"result,omitempty"`
 	Confidence float64    `json:"confidence"`
 	CreatedAt  time.Time  `json:"created_at"`
 	ExecutedAt *time.Time `json:"executed_at,omitempty"`

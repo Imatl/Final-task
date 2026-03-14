@@ -19,6 +19,9 @@ func CreateTicket(ctx context.Context, t *structs.Ticket) error {
 }
 
 func GetTicket(ctx context.Context, id string) (*structs.Ticket, error) {
+	if Pool == nil {
+		return nil, fmt.Errorf("database pool is not initialized")
+	}
 	t := &structs.Ticket{}
 	err := Pool.QueryRow(ctx,
 		`SELECT id, customer_id, subject, channel, status, priority, category, agent_id, ai_summary, created_at, updated_at, closed_at
@@ -31,6 +34,9 @@ func GetTicket(ctx context.Context, id string) (*structs.Ticket, error) {
 }
 
 func UpdateTicketStatus(ctx context.Context, id, status string) error {
+	if Pool == nil {
+		return fmt.Errorf("database pool is not initialized")
+	}
 	var closedAt *time.Time
 	if status == "resolved" || status == "closed" {
 		now := time.Now()

@@ -2,11 +2,15 @@ package postgre
 
 import (
 	"context"
+	"fmt"
 
 	"supportflow/core/structs"
 )
 
 func GetCustomer(ctx context.Context, id string) (*structs.Customer, error) {
+	if Pool == nil {
+		return nil, fmt.Errorf("database pool is not initialized")
+	}
 	c := &structs.Customer{}
 	err := Pool.QueryRow(ctx,
 		`SELECT id, name, email, plan, created_at FROM supportflow.customers WHERE id = $1`, id,

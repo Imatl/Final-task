@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS supportflow;
 
-CREATE TABLE supportflow.customers (
+CREATE TABLE IF NOT EXISTS supportflow.customers (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name       VARCHAR(255) NOT NULL,
     email      VARCHAR(255) UNIQUE NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE supportflow.customers (
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE TABLE supportflow.agents (
+CREATE TABLE IF NOT EXISTS supportflow.agents (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name       VARCHAR(255) NOT NULL,
     email      VARCHAR(255) UNIQUE NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE supportflow.agents (
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE TABLE supportflow.tickets (
+CREATE TABLE IF NOT EXISTS supportflow.tickets (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL REFERENCES supportflow.customers(id),
     agent_id    UUID REFERENCES supportflow.agents(id),
@@ -31,7 +31,7 @@ CREATE TABLE supportflow.tickets (
     closed_at   TIMESTAMP
 );
 
-CREATE TABLE supportflow.messages (
+CREATE TABLE IF NOT EXISTS supportflow.messages (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id  UUID NOT NULL REFERENCES supportflow.tickets(id),
     role       VARCHAR(20) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE supportflow.messages (
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE TABLE supportflow.actions (
+CREATE TABLE IF NOT EXISTS supportflow.actions (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id   UUID NOT NULL REFERENCES supportflow.tickets(id),
     type        VARCHAR(100) NOT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE supportflow.actions (
     executed_at TIMESTAMP
 );
 
-CREATE TABLE supportflow.ai_analyses (
+CREATE TABLE IF NOT EXISTS supportflow.ai_analyses (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id       UUID NOT NULL REFERENCES supportflow.tickets(id),
     intent          VARCHAR(100) NOT NULL,
@@ -63,9 +63,9 @@ CREATE TABLE supportflow.ai_analyses (
     created_at      TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_tickets_status ON supportflow.tickets(status);
-CREATE INDEX idx_tickets_customer ON supportflow.tickets(customer_id);
-CREATE INDEX idx_tickets_agent ON supportflow.tickets(agent_id);
-CREATE INDEX idx_messages_ticket ON supportflow.messages(ticket_id);
-CREATE INDEX idx_actions_ticket ON supportflow.actions(ticket_id);
-CREATE INDEX idx_analyses_ticket ON supportflow.ai_analyses(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON supportflow.tickets(status);
+CREATE INDEX IF NOT EXISTS idx_tickets_customer ON supportflow.tickets(customer_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_agent ON supportflow.tickets(agent_id);
+CREATE INDEX IF NOT EXISTS idx_messages_ticket ON supportflow.messages(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_actions_ticket ON supportflow.actions(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_analyses_ticket ON supportflow.ai_analyses(ticket_id);

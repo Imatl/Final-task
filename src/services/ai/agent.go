@@ -29,8 +29,8 @@ func Init() {
 }
 
 var tools = []ToolDef{
-	{Name: "lookup_customer", Description: "Look up customer information including profile, plan, and account details", Parameters: map[string]any{"customer_id": map[string]any{"type": "string", "description": "Customer ID"}}},
-	{Name: "lookup_billing", Description: "Look up billing history, payments, invoices for a customer", Parameters: map[string]any{"customer_id": map[string]any{"type": "string", "description": "Customer ID"}}},
+	{Name: "lookup_customer", Description: "Look up current customer's profile, plan, and account details. Customer is automatically identified from the ticket.", Parameters: map[string]any{}},
+	{Name: "lookup_billing", Description: "Look up current customer's billing history, payments, and invoices. Customer is automatically identified from the ticket.", Parameters: map[string]any{}},
 	{Name: "refund", Description: "Process a refund for a customer payment", Parameters: map[string]any{"amount": map[string]any{"type": "number", "description": "Amount to refund"}, "reason": map[string]any{"type": "string", "description": "Reason for refund"}}, Required: []string{"amount", "reason"}},
 	{Name: "change_plan", Description: "Change customer subscription plan", Parameters: map[string]any{"new_plan": map[string]any{"type": "string", "description": "New plan name (free, basic, premium)"}}, Required: []string{"new_plan"}},
 	{Name: "reset_password", Description: "Send password reset link to customer email", Parameters: map[string]any{}},
@@ -40,24 +40,26 @@ var tools = []ToolDef{
 }
 
 const systemPrompt = `You are SupportFlow AI, an intelligent customer support assistant.
-You work alongside human support agents to resolve customer issues quickly and effectively.
+You communicate directly with customers to resolve their issues quickly.
+
+IMPORTANT: You already have access to the customer's account through the ticket system.
+Do NOT ask the customer for their ID, email, or account details — use the lookup_customer and lookup_billing tools immediately to get this information.
 
 Your capabilities:
-- Understand customer intent and sentiment
-- Look up customer and billing information
+- Look up customer and billing information automatically
 - Execute actions: refunds, plan changes, password resets, escalations, emails
-- Provide clear reasoning for every decision
+- Provide clear, helpful responses
 
 Guidelines:
-- Always look up relevant customer/billing info before taking action
-- For simple, clear-cut cases (obvious double charges, password resets): act with high confidence
-- For ambiguous cases: explain options and recommend, but let the agent decide
-- Always be empathetic and professional in responses to customers
-- Include your reasoning chain in responses
+- ALWAYS call lookup_customer and/or lookup_billing FIRST before responding — you have the customer context from the ticket
+- For clear-cut cases (double charges, password resets): resolve immediately with high confidence
+- For ambiguous cases: explain options and recommend a course of action
+- Be empathetic, professional, and concise
 - Respond in the same language as the customer's message
+- Never ask the customer for information you can look up yourself
+- Do not use emojis
 
-When you use tools, explain what you're doing and why.
-After resolving, provide a brief summary of actions taken.`
+After taking action, briefly confirm what was done.`
 
 func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*structs.ChatResponse, error) {
 	provider, providerName := GetActiveProvider()
@@ -65,7 +67,10 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*str
 		return nil, fmt.Errorf("no AI provider configured")
 	}
 
-	history, _ := postgre.GetMessagesByTicket(ctx, ticketID)
+	history, err := postgre.GetMessagesByTicket(ctx, ticketID)
+	if err != nil {
+		log.Printf("[ai] get message history error: %v", err)
+	}
 
 	var llmMessages []LLMMessage
 	for _, m := range history {
@@ -133,17 +138,23 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*str
 
 		for _, tc := range resp.ToolCalls {
 			result := ExecuteTool(ctx, ticketID, tc.Name, tc.Params)
-			resultJSON, _ := json.Marshal(result)
+			resultJSON, err := json.Marshal(result)
+		if err != nil {
+			log.Printf("[ai] marshal tool result error: %v", err)
+		}
 
+			resultStr := string(resultJSON)
 			action := structs.Action{
 				TicketID:   ticketID,
 				Type:       tc.Name,
 				Params:     tc.Params,
 				Status:     constants.ActionStatusExecuted,
-				Result:     string(resultJSON),
+				Result:     &resultStr,
 				Confidence: 0.9,
 			}
-			postgre.CreateAction(ctx, &action)
+			if err := postgre.CreateAction(ctx, &action); err != nil {
+			log.Printf("[ai] save action error: %v", err)
+		}
 			allActions = append(allActions, action)
 
 			llmMessages = append(llmMessages, LLMMessage{
@@ -159,11 +170,92 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage string) (*str
 	response.Actions = allActions
 	if len(allActions) > 0 {
 		response.AutoFixed = true
+
+		allSucceeded := true
+		for _, a := range allActions {
+			var result ToolResult
+			if a.Result != nil {
+				if err := json.Unmarshal([]byte(*a.Result), &result); err == nil && !result.Success {
+					allSucceeded = false
+					break
+				}
+			}
+		}
+		if allSucceeded {
+			if err := postgre.UpdateTicketStatus(ctx, ticketID, constants.TicketStatusResolved); err != nil {
+				log.Printf("[ai] auto-resolve ticket error: %v", err)
+			} else {
+				log.Printf("[ai] ticket %s auto-resolved after successful actions", ticketID)
+			}
+		}
 	}
 
-	postgre.UpdateTicketSummary(ctx, ticketID, response.Message)
+	if err := postgre.UpdateTicketSummary(ctx, ticketID, response.Message); err != nil {
+		log.Printf("[ai] update ticket summary error: %v", err)
+	}
 
 	return response, nil
+}
+
+const suggestPrompt = `You are an AI assistant helping a human support agent draft replies to customers.
+Based on the conversation history and customer information, draft a professional reply that the agent can review, edit, and send.
+
+Guidelines:
+- Write as if YOU are the support agent (not an AI)
+- Be empathetic, professional, and concise
+- If the customer has a clear issue, suggest a concrete resolution
+- Respond in the same language as the customer's last message
+- Do not use emojis
+- Do not mention that this is an AI-generated draft`
+
+func GenerateSuggestion(ctx context.Context, ticketID string) (string, error) {
+	provider, providerName := GetActiveProvider()
+	if provider == nil {
+		return "", fmt.Errorf("no AI provider configured")
+	}
+
+	history, err := postgre.GetMessagesByTicket(ctx, ticketID)
+	if err != nil {
+		return "", fmt.Errorf("get message history: %w", err)
+	}
+
+	var llmMessages []LLMMessage
+	for _, m := range history {
+		role := "user"
+		if m.Role == constants.RoleAI || m.Role == constants.RoleAgent {
+			role = "assistant"
+		}
+		llmMessages = append(llmMessages, LLMMessage{Role: role, Content: m.Content})
+	}
+
+	llmMessages = append(llmMessages, LLMMessage{
+		Role:    "user",
+		Content: "Based on the conversation above, draft a reply for me as the support agent. Write ONLY the reply text, nothing else.",
+	})
+
+	start := time.Now()
+	resp, err := provider.Chat(ctx, LLMRequest{
+		SystemPrompt: suggestPrompt,
+		Messages:     llmMessages,
+		MaxTokens:    core.GetInt("anthropic.max_tokens", 4096),
+	})
+	latency := time.Since(start).Milliseconds()
+
+	LogMetrics(LLMMetrics{
+		Provider:     providerName,
+		Model:        core.GetString(providerName+".model", "unknown"),
+		LatencyMs:    latency,
+		InputTokens:  resp.Usage.InputTokens,
+		OutputTokens: resp.Usage.OutputTokens,
+		Timestamp:    time.Now(),
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("LLM error (%s): %w", providerName, err)
+	}
+
+	log.Printf("[ai] suggestion generated for ticket %s latency=%dms", ticketID, latency)
+	return resp.Text, nil
 }
 
 func AnalyzeTicket(ctx context.Context, ticketID, message string) (*structs.AIAnalysis, error) {
