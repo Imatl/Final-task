@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@/i18n';
 import { MainLayout } from '@/components/layout';
 import { CustomerChatPage } from '@/pages/CustomerChat';
 import { AgentDashboardPage } from '@/pages/AgentDashboard';
