@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "chat": "Чат підтримки",
+    "dashboard": "Панель агента",
+    "analytics": "Аналітика",
+    "settings": "Налаштування"
+  },
+  "sidebar": {
+    "subtitle": "AI Підтримка",
+    "main": "Головне",
+    "management": "Управління",
+    "settings": "Налаштування",
+    "logout": "Вийти",
+    "languageNote": "Мова інтерфейсу"
+  },
+  "chat": {
+    "title": "Чат підтримки",
+    "subtitle": "AI-асистент",
+    "placeholder": "Опишіть вашу проблему...",
+    "welcome": "Чим ми можемо вам допомогти?",
+    "welcomeSub": "Опишіть проблему і наш AI допоможе вам миттєво",
+    "newChat": "Новий чат",
+    "thinking": "Думаю...",
+    "error": "Вибачте, щось пішло не так. Спробуйте ще раз.",
+    "quickReplies": {
+      "charged": "Мене списали двічі",
+      "password": "Скинути пароль",
+      "plan": "Змінити тариф на преміум",
+      "cancel": "Скасувати підписку"
+    },
+    "channels": {
+      "web": "Веб",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "integration": "Мультиканальність",
+    "actionLabels": {
+      "refund": "Повернення коштів",
+      "change_plan": "Тариф змінено",
+      "reset_password": "Пароль скинуто",
+      "escalate": "Передано агенту",
+      "send_email": "Email надіслано",
+      "cancel_subscription": "Підписку скасовано",
+      "lookup_billing": "Пошук білінгу",
+      "lookup_customer": "Пошук клієнта"
+    }
+  },
+  "dashboard": {
+    "title": "Панель агента",
+    "tickets": "тікетів",
+    "all": "Всі",
+    "loading": "Завантаження тікетів...",
+    "noTickets": "Тікети не знайдено",
+    "messages": "Повідомлення",
+    "actionsTaken": "Виконані дії",
+    "aiSummary": "AI Резюме",
+    "ago": "тому"
+  },
+  "analytics": {
+    "title": "Аналітика",
+    "totalTickets": "Всього тікетів",
+    "openTickets": "Відкриті тікети",
+    "avgResolve": "Сер. час вирішення",
+    "autoResolve": "Авто-вирішення",
+    "byCategory": "За категорією",
+    "byPriority": "За пріоритетом",
+    "bySentiment": "За настроєм",
+    "agentPerformance": "Продуктивність агентів",
+    "agent": "Агент",
+    "resolved": "Вирішено",
+    "avgTime": "Сер. час",
+    "quality": "Якість",
+    "minutes": "хв",
+    "noData": "Даних поки немає"
+  },
+  "settings": {
+    "title": "Налаштування та продуктивність",
+    "provider": "AI Провайдер",
+    "calls": "Виклики",
+    "avgLatency": "Сер. затримка",
+    "min": "Мін",
+    "max": "Макс",
+    "latency": "Затримка (мс)",
+    "tokenUsage": "Використання токенів",
+    "recentCalls": "Останні виклики",
+    "model": "Модель",
+    "input": "Вхід",
+    "output": "Вихід",
+    "tools": "Інструменти",
+    "errorCol": "Помилка",
+    "noData": "Даних поки немає",
+    "active": "активний"
+  }
+}

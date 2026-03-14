@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { settingsApi } from '@/api/client';
 import type { LLMMetrics } from '@/api/client';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -15,10 +16,6 @@ import {
 import { cn } from '@/lib/cn';
 import { Activity, Cpu, Zap } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
-
-const darkTooltipStyle = {
-  contentStyle: { backgroundColor: '#110d24', border: '1px solid #1a1435', borderRadius: '8px', color: '#e5e7eb', fontSize: 12 },
-};
 
 function LatencyChart({ metrics }: { metrics: LLMMetrics[] }) {
   const data = metrics.map((m, i) => ({
@@ -54,6 +51,7 @@ function LatencyChart({ metrics }: { metrics: LLMMetrics[] }) {
 }
 
 function TokensChart({ metrics }: { metrics: LLMMetrics[] }) {
+  const { t } = useTranslation();
   const data = metrics.map((m, i) => ({
     idx: i,
     input: m.input_tokens,
@@ -66,15 +64,18 @@ function TokensChart({ metrics }: { metrics: LLMMetrics[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="#1a1435" />
         <XAxis dataKey="idx" tick={{ fontSize: 11, fill: '#9ca3af' }} />
         <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} />
-        <Tooltip {...darkTooltipStyle} />
-        <Bar dataKey="input" fill="#60a5fa" stackId="tokens" name="Input" />
-        <Bar dataKey="output" fill="#4ade80" stackId="tokens" name="Output" radius={[4, 4, 0, 0]} />
+        <Tooltip
+          contentStyle={{ backgroundColor: '#110d24', border: '1px solid #1a1435', borderRadius: '8px', color: '#e5e7eb', fontSize: 12 }}
+        />
+        <Bar dataKey="input" fill="#60a5fa" stackId="tokens" name={t('settings.input')} />
+        <Bar dataKey="output" fill="#4ade80" stackId="tokens" name={t('settings.output')} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: providersData } = useQuery({
@@ -98,12 +99,12 @@ export function SettingsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-lg font-semibold text-white">Settings & Performance</h1>
+      <h1 className="text-lg font-semibold text-white">{t('settings.title')}</h1>
 
       <Card className="p-5">
         <h3 className="text-sm font-medium text-gray-300 mb-4 flex items-center gap-2">
           <Cpu className="w-4 h-4 text-neon-violet" />
-          AI Provider
+          {t('settings.provider')}
         </h3>
         <div className="flex gap-3">
           {providersData?.providers?.map((p) => (
@@ -118,7 +119,7 @@ export function SettingsPage() {
               )}
             >
               {p === 'anthropic' ? 'Claude (Anthropic)' : p === 'openai' ? 'GPT (OpenAI)' : p}
-              {p === providersData.active && <Badge variant="neon" className="ml-2">active</Badge>}
+              {p === providersData.active && <Badge variant="neon" className="ml-2">{t('settings.active')}</Badge>}
             </button>
           ))}
         </div>
@@ -131,19 +132,19 @@ export function SettingsPage() {
               <h4 className="text-sm font-medium text-gray-300 mb-3 capitalize">{name}</h4>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <span className="text-gray-500 text-xs">Calls</span>
+                  <span className="text-gray-500 text-xs">{t('settings.calls')}</span>
                   <div className="text-2xl font-bold text-white">{s.calls}</div>
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs">Avg Latency</span>
+                  <span className="text-gray-500 text-xs">{t('settings.avgLatency')}</span>
                   <div className="text-2xl font-bold text-neon-violet font-mono">{s.avg_ms}ms</div>
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs">Min</span>
+                  <span className="text-gray-500 text-xs">{t('settings.min')}</span>
                   <div className="font-medium text-gray-300 font-mono">{s.min_ms}ms</div>
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs">Max</span>
+                  <span className="text-gray-500 text-xs">{t('settings.max')}</span>
                   <div className="font-medium text-gray-300 font-mono">{s.max_ms}ms</div>
                 </div>
               </div>
@@ -156,42 +157,42 @@ export function SettingsPage() {
         <Card className="p-5">
           <h3 className="text-sm font-medium text-gray-300 mb-4 flex items-center gap-2">
             <Activity className="w-4 h-4 text-neon-cyan" />
-            Latency (ms)
+            {t('settings.latency')}
           </h3>
           {metricsData?.metrics?.length ? (
             <LatencyChart metrics={metricsData.metrics} />
           ) : (
-            <div className="h-[250px] flex items-center justify-center text-gray-600 text-sm">No data yet</div>
+            <div className="h-[250px] flex items-center justify-center text-gray-600 text-sm">{t('settings.noData')}</div>
           )}
         </Card>
 
         <Card className="p-5">
           <h3 className="text-sm font-medium text-gray-300 mb-4 flex items-center gap-2">
             <Zap className="w-4 h-4 text-neon-green" />
-            Token Usage
+            {t('settings.tokenUsage')}
           </h3>
           {metricsData?.metrics?.length ? (
             <TokensChart metrics={metricsData.metrics} />
           ) : (
-            <div className="h-[250px] flex items-center justify-center text-gray-600 text-sm">No data yet</div>
+            <div className="h-[250px] flex items-center justify-center text-gray-600 text-sm">{t('settings.noData')}</div>
           )}
         </Card>
       </div>
 
       {metricsData?.metrics && metricsData.metrics.length > 0 && (
         <Card className="p-5">
-          <h3 className="text-sm font-medium text-gray-300 mb-4">Recent Calls</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-4">{t('settings.recentCalls')}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-cosmic-700/50">
-                  <th className="pb-2 pr-4">Provider</th>
-                  <th className="pb-2 pr-4">Model</th>
-                  <th className="pb-2 pr-4">Latency</th>
-                  <th className="pb-2 pr-4">In</th>
-                  <th className="pb-2 pr-4">Out</th>
-                  <th className="pb-2 pr-4">Tools</th>
-                  <th className="pb-2">Error</th>
+                  <th className="pb-2 pr-4">{t('settings.provider')}</th>
+                  <th className="pb-2 pr-4">{t('settings.model')}</th>
+                  <th className="pb-2 pr-4">{t('settings.latency')}</th>
+                  <th className="pb-2 pr-4">{t('settings.input')}</th>
+                  <th className="pb-2 pr-4">{t('settings.output')}</th>
+                  <th className="pb-2 pr-4">{t('settings.tools')}</th>
+                  <th className="pb-2">{t('settings.errorCol')}</th>
                 </tr>
               </thead>
               <tbody>

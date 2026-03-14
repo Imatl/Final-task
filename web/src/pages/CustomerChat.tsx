@@ -1,45 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Zap, CheckCircle, AlertTriangle, Loader2, MessageSquare, Globe, Mail } from 'lucide-react';
+import { Send, Bot, User, Zap, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store/chat';
 import { chatApi } from '@/api/client';
 import type { Action } from '@/api/client';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui';
 
-const ACTION_LABELS: Record<string, string> = {
-  refund: 'Refund Processed',
-  change_plan: 'Plan Changed',
-  reset_password: 'Password Reset',
-  escalate: 'Escalated',
-  send_email: 'Email Sent',
-  cancel_subscription: 'Subscription Cancelled',
-  lookup_billing: 'Billing Lookup',
-  lookup_customer: 'Customer Lookup',
-};
-
-const CHANNELS = [
-  { id: 'web', label: 'Web', icon: Globe },
-  { id: 'telegram', label: 'Telegram', icon: MessageSquare },
-  { id: 'email', label: 'Email', icon: Mail },
-];
-
-const DEMO_CUSTOMERS = [
-  { id: 'a0000000-0000-0000-0000-000000000001', name: 'Ivan Petrov' },
-  { id: 'a0000000-0000-0000-0000-000000000002', name: 'Maria Sidorova' },
-  { id: 'a0000000-0000-0000-0000-000000000003', name: 'Alex Kozlov' },
-  { id: 'a0000000-0000-0000-0000-000000000004', name: 'Elena Novikova' },
-  { id: 'a0000000-0000-0000-0000-000000000005', name: 'Dmitry Volkov' },
-];
-
 function ActionCard({ action }: { action: Action }) {
+  const { t } = useTranslation();
   const result = action.result ? JSON.parse(action.result) : null;
+  const label = t(`chat.actionLabels.${action.type}`, { defaultValue: action.type });
 
   return (
     <div className="mt-2 bg-velvet-900/30 border border-velvet-600/30 rounded-lg p-3">
       <div className="flex items-center gap-2 text-sm font-medium text-neon-purple">
         <Zap className="w-4 h-4 text-neon-violet" />
-        {ACTION_LABELS[action.type] || action.type}
+        {label}
         {result?.success ? (
           <CheckCircle className="w-4 h-4 text-neon-green ml-auto" />
         ) : (
@@ -57,11 +35,11 @@ function ActionCard({ action }: { action: Action }) {
 }
 
 export function CustomerChatPage() {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [channel, setChannel] = useState('web');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, ticketId, customerId, addMessage, setTicketId, setCustomerId, clearChat } = useChatStore();
+  const { messages, ticketId, customerId, addMessage, setTicketId } = useChatStore();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -80,7 +58,7 @@ export function CustomerChatPage() {
       const { data } = await chatApi.send({
         ticket_id: ticketId || undefined,
         customer_id: customerId,
-        channel,
+        channel: 'web',
         message: text,
       });
 
@@ -103,7 +81,7 @@ export function CustomerChatPage() {
       const msgs = [...store.messages];
       msgs[msgs.length - 1] = {
         ...msgs[msgs.length - 1],
-        content: 'Sorry, something went wrong. Please try again.',
+        content: t('chat.error'),
         isLoading: false,
       };
       useChatStore.setState({ messages: msgs });
@@ -112,65 +90,29 @@ export function CustomerChatPage() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-screen">
-      <div className="bg-cosmic-900 border-b border-cosmic-700/50 px-6 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-white">Customer Support Chat</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            {ticketId && (
-              <span className="text-xs text-gray-500 font-mono">Ticket: {ticketId.slice(0, 8)}</span>
-            )}
-            <Badge variant="neon" dot>{channel}</Badge>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex bg-cosmic-800 rounded-lg p-1 gap-1">
-            {CHANNELS.map((ch) => (
-              <button
-                key={ch.id}
-                onClick={() => { setChannel(ch.id); clearChat(); }}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
-                  channel === ch.id
-                    ? 'bg-velvet-600 text-white neon-glow-sm'
-                    : 'text-gray-400 hover:text-gray-200'
-                )}
-              >
-                <ch.icon className="w-3.5 h-3.5" />
-                {ch.label}
-              </button>
-            ))}
-          </div>
-          <select
-            value={customerId}
-            onChange={(e) => { setCustomerId(e.target.value); clearChat(); }}
-            className="text-sm bg-cosmic-800 border border-cosmic-600 text-gray-300 rounded-lg px-3 py-1.5 focus:border-neon-violet/50 focus:outline-none"
-          >
-            {DEMO_CUSTOMERS.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-          <button onClick={clearChat} className="text-xs text-gray-500 hover:text-neon-violet transition-colors">
-            New Chat
-          </button>
-        </div>
-      </div>
+  const quickReplies = [
+    t('chat.quickReplies.charged'),
+    t('chat.quickReplies.password'),
+    t('chat.quickReplies.plan'),
+    t('chat.quickReplies.cancel'),
+  ];
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-20">
+          <div className="text-center mt-16">
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-velvet-600 to-neon-violet flex items-center justify-center animate-pulse-neon">
               <Bot className="w-10 h-10 text-white" />
             </div>
-            <p className="text-xl text-gray-300">How can we help you today?</p>
-            <p className="text-sm mt-2 text-gray-500">Describe your issue and our AI will assist you</p>
+            <p className="text-xl text-gray-300">{t('chat.welcome')}</p>
+            <p className="text-sm mt-2 text-gray-500">{t('chat.welcomeSub')}</p>
             <div className="flex flex-wrap gap-2 justify-center mt-8">
-              {['I was charged twice', 'Reset my password', 'Change my plan to premium', 'Cancel my subscription'].map((q) => (
+              {quickReplies.map((q) => (
                 <button
                   key={q}
                   onClick={() => setInput(q)}
-                  className="px-4 py-2 bg-cosmic-800 border border-cosmic-700/50 rounded-full text-sm text-gray-300 hover:border-neon-violet/30 hover:text-neon-purple transition-all duration-200"
+                  className="px-4 py-2 bg-cosmic-800/80 border border-cosmic-700/50 rounded-full text-sm text-gray-300 hover:border-neon-violet/30 hover:text-neon-purple hover:bg-cosmic-800 transition-all duration-200"
                 >
                   {q}
                 </button>
@@ -183,7 +125,7 @@ export function CustomerChatPage() {
           <div
             key={msg.id}
             className={cn(
-              'flex gap-3 max-w-3xl',
+              'flex gap-3 max-w-3xl mx-auto',
               msg.role === 'customer' ? 'ml-auto flex-row-reverse' : ''
             )}
           >
@@ -198,17 +140,17 @@ export function CustomerChatPage() {
             <div className={cn(
               'rounded-xl px-4 py-3 max-w-lg',
               msg.role === 'customer'
-                ? 'bg-velvet-600 text-white'
-                : 'bg-cosmic-800 border border-cosmic-700/50'
+                ? 'bg-velvet-600/80 text-white'
+                : 'bg-cosmic-800/80 border border-cosmic-700/50 backdrop-blur-sm'
             )}>
               {msg.isLoading ? (
                 <div className="flex items-center gap-2 text-gray-400">
                   <Loader2 className="w-4 h-4 animate-spin text-neon-violet" />
-                  <span className="text-sm animate-shimmer">Thinking...</span>
+                  <span className="text-sm animate-shimmer">{t('chat.thinking')}</span>
                 </div>
               ) : (
                 <>
-                  <div className={cn('text-sm prose prose-sm prose-invert max-w-none')}>
+                  <div className="text-sm prose prose-sm prose-invert max-w-none">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                   {msg.actions && msg.actions.length > 0 && (
@@ -233,15 +175,15 @@ export function CustomerChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="bg-cosmic-900 border-t border-cosmic-700/50 p-4">
+      <div className="bg-cosmic-900/80 backdrop-blur-sm border-t border-cosmic-700/50 p-4">
         <div className="max-w-3xl mx-auto flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type your message..."
-            className="flex-1 bg-cosmic-800 border border-cosmic-600 text-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-neon-violet/50 focus:ring-2 focus:ring-neon-violet/20 placeholder-gray-500 transition-all"
+            placeholder={t('chat.placeholder')}
+            className="flex-1 bg-cosmic-800/80 border border-cosmic-600 text-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-neon-violet/50 focus:ring-2 focus:ring-neon-violet/20 placeholder-gray-500 transition-all backdrop-blur-sm"
             disabled={isLoading}
           />
           <button

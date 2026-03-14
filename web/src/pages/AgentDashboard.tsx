@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ticketsApi } from '@/api/client';
 import type { Ticket } from '@/api/client';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   AlertCircle,
@@ -37,6 +38,7 @@ const STATUS_ICONS: Record<string, typeof Clock> = {
 };
 
 function TicketRow({ ticket, isSelected, onSelect }: { ticket: Ticket; isSelected: boolean; onSelect: (id: string) => void }) {
+  const { t } = useTranslation();
   const StatusIcon = STATUS_ICONS[ticket.status] || Clock;
   const ChannelIcon = CHANNEL_ICONS[ticket.channel] || Globe;
   const age = Math.round((Date.now() - new Date(ticket.created_at).getTime()) / 60000);
@@ -56,7 +58,7 @@ function TicketRow({ ticket, isSelected, onSelect }: { ticket: Ticket; isSelecte
       <ChannelIcon className="w-4 h-4 text-gray-500" />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-gray-200 truncate">{ticket.subject}</div>
-        <div className="text-xs text-gray-500">{ticket.category} | {ageLabel} ago</div>
+        <div className="text-xs text-gray-500">{ticket.category} | {ageLabel} {t('dashboard.ago')}</div>
       </div>
       <Badge variant={PRIORITY_BADGE[ticket.priority] || 'default'}>{ticket.priority}</Badge>
       <Badge variant={ticket.status === 'open' ? 'error' : ticket.status === 'resolved' ? 'success' : 'default'} dot>{ticket.status}</Badge>
@@ -66,6 +68,7 @@ function TicketRow({ ticket, isSelected, onSelect }: { ticket: Ticket; isSelecte
 }
 
 function TicketDetailPanel({ ticketId, onClose }: { ticketId: string; onClose: () => void }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['ticket', ticketId],
     queryFn: () => ticketsApi.get(ticketId).then((r) => r.data),
@@ -77,7 +80,7 @@ function TicketDetailPanel({ ticketId, onClose }: { ticketId: string; onClose: (
   const ChannelIcon = CHANNEL_ICONS[data.ticket.channel] || Globe;
 
   return (
-    <div className="bg-cosmic-900 border-l border-cosmic-700/50 h-full overflow-y-auto">
+    <div className="bg-cosmic-900/80 backdrop-blur-sm border-l border-cosmic-700/50 h-full overflow-y-auto">
       <div className="p-4 border-b border-cosmic-700/50 flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-white">{data.ticket.subject}</h3>
@@ -101,13 +104,13 @@ function TicketDetailPanel({ ticketId, onClose }: { ticketId: string; onClose: (
 
       {data.ticket.ai_summary && (
         <div className="p-4 border-b border-cosmic-700/50 bg-velvet-900/20">
-          <p className="text-xs font-medium text-neon-violet mb-1">AI Summary</p>
+          <p className="text-xs font-medium text-neon-violet mb-1">{t('dashboard.aiSummary')}</p>
           <p className="text-sm text-gray-300">{data.ticket.ai_summary}</p>
         </div>
       )}
 
       <div className="p-4 space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Messages</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('dashboard.messages')}</p>
         {data.messages?.map((msg) => (
           <div key={msg.id} className={cn(
             'text-sm p-3 rounded-lg border',
@@ -123,7 +126,7 @@ function TicketDetailPanel({ ticketId, onClose }: { ticketId: string; onClose: (
 
       {data.actions && data.actions.length > 0 && (
         <div className="p-4 border-t border-cosmic-700/50 space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions Taken</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('dashboard.actionsTaken')}</p>
           {data.actions.map((action) => (
             <Card key={action.id} variant="glass" className="p-3">
               <div className="flex items-center gap-2">
@@ -140,6 +143,7 @@ function TicketDetailPanel({ ticketId, onClose }: { ticketId: string; onClose: (
 }
 
 export function AgentDashboardPage() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
 
@@ -154,10 +158,10 @@ export function AgentDashboardPage() {
   return (
     <div className="flex h-screen">
       <div className={cn('flex-1 flex flex-col', selectedTicket ? 'max-w-[60%]' : '')}>
-        <div className="bg-cosmic-900 border-b border-cosmic-700/50 px-6 py-3 flex items-center justify-between">
+        <div className="bg-cosmic-900/80 backdrop-blur-sm border-b border-cosmic-700/50 px-6 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-white">Agent Dashboard</h1>
-            <span className="text-xs text-gray-500">{data?.total || 0} tickets</span>
+            <h1 className="text-lg font-semibold text-white">{t('dashboard.title')}</h1>
+            <span className="text-xs text-gray-500">{data?.total || 0} {t('dashboard.tickets')}</span>
           </div>
           <div className="flex items-center gap-1 bg-cosmic-800 rounded-lg p-1">
             {statuses.map((s) => (
@@ -171,7 +175,7 @@ export function AgentDashboardPage() {
                     : 'text-gray-400 hover:text-gray-200'
                 )}
               >
-                {s || 'All'}
+                {s || t('dashboard.all')}
               </button>
             ))}
           </div>
@@ -179,15 +183,15 @@ export function AgentDashboardPage() {
 
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="p-6 text-gray-500">Loading tickets...</div>
+            <div className="p-6 text-gray-500">{t('dashboard.loading')}</div>
           ) : data?.tickets?.length ? (
-            data.tickets.map((t) => (
-              <TicketRow key={t.id} ticket={t} isSelected={selectedTicket === t.id} onSelect={setSelectedTicket} />
+            data.tickets.map((ticket) => (
+              <TicketRow key={ticket.id} ticket={ticket} isSelected={selectedTicket === ticket.id} onSelect={setSelectedTicket} />
             ))
           ) : (
             <div className="p-12 text-center text-gray-500">
               <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-              <p>No tickets found</p>
+              <p>{t('dashboard.noTickets')}</p>
             </div>
           )}
         </div>

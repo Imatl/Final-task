@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "chat": "Customer Chat",
+    "dashboard": "Agent Dashboard",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "subtitle": "AI Support",
+    "main": "Main",
+    "management": "Management",
+    "settings": "Settings",
+    "logout": "Log out",
+    "languageNote": "Interface language"
+  },
+  "chat": {
+    "title": "Support Chat",
+    "subtitle": "AI-powered assistance",
+    "placeholder": "Describe your issue...",
+    "welcome": "How can we help you today?",
+    "welcomeSub": "Describe your issue and our AI will assist you instantly",
+    "newChat": "New Chat",
+    "thinking": "Thinking...",
+    "error": "Sorry, something went wrong. Please try again.",
+    "quickReplies": {
+      "charged": "I was charged twice",
+      "password": "Reset my password",
+      "plan": "Change my plan to premium",
+      "cancel": "Cancel my subscription"
+    },
+    "channels": {
+      "web": "Web",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "integration": "Multi-channel",
+    "actionLabels": {
+      "refund": "Refund Processed",
+      "change_plan": "Plan Changed",
+      "reset_password": "Password Reset",
+      "escalate": "Escalated to Agent",
+      "send_email": "Email Sent",
+      "cancel_subscription": "Subscription Cancelled",
+      "lookup_billing": "Billing Lookup",
+      "lookup_customer": "Customer Lookup"
+    }
+  },
+  "dashboard": {
+    "title": "Agent Dashboard",
+    "tickets": "tickets",
+    "all": "All",
+    "loading": "Loading tickets...",
+    "noTickets": "No tickets found",
+    "messages": "Messages",
+    "actionsTaken": "Actions Taken",
+    "aiSummary": "AI Summary",
+    "ago": "ago"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "totalTickets": "Total Tickets",
+    "openTickets": "Open Tickets",
+    "avgResolve": "Avg Resolve Time",
+    "autoResolve": "Auto-Resolve Rate",
+    "byCategory": "By Category",
+    "byPriority": "By Priority",
+    "bySentiment": "By Sentiment",
+    "agentPerformance": "Agent Performance",
+    "agent": "Agent",
+    "resolved": "Resolved",
+    "avgTime": "Avg Time",
+    "quality": "Quality",
+    "minutes": "min",
+    "noData": "No data yet"
+  },
+  "settings": {
+    "title": "Settings & Performance",
+    "provider": "AI Provider",
+    "calls": "Calls",
+    "avgLatency": "Avg Latency",
+    "min": "Min",
+    "max": "Max",
+    "latency": "Latency (ms)",
+    "tokenUsage": "Token Usage",
+    "recentCalls": "Recent Calls",
+    "model": "Model",
+    "input": "In",
+    "output": "Out",
+    "tools": "Tools",
+    "errorCol": "Error",
+    "noData": "No data yet",
+    "active": "active"
+  }
+}
