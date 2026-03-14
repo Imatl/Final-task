@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui';
 function ActionCard({ action }: { action: Action }) {
   const { t } = useTranslation();
   const result = action.result ? JSON.parse(action.result) : null;
-
   const label = t(`chat.actionLabels.${action.type}`, { defaultValue: action.type });
 
   return (
@@ -40,7 +39,7 @@ export function CustomerChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, ticketId, customerId, addMessage, setTicketId, clearChat } = useChatStore();
+  const { messages, ticketId, customerId, addMessage, setTicketId } = useChatStore();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,35 +98,10 @@ export function CustomerChatPage() {
   ];
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="bg-cosmic-900/80 backdrop-blur-sm border-b border-cosmic-700/50 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-velvet-600 to-neon-violet flex items-center justify-center neon-glow-sm">
-            <Bot className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-white">{t('chat.title')}</h1>
-            <p className="text-xs text-gray-500">{t('chat.subtitle')}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {ticketId && (
-            <span className="text-xs text-gray-500 font-mono bg-cosmic-800 px-2 py-1 rounded">
-              #{ticketId.slice(0, 8)}
-            </span>
-          )}
-          <button
-            onClick={clearChat}
-            className="text-xs text-gray-400 hover:text-neon-violet transition-colors bg-cosmic-800 hover:bg-cosmic-700 px-3 py-1.5 rounded-lg border border-cosmic-700/50"
-          >
-            {t('chat.newChat')}
-          </button>
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
         {messages.length === 0 && (
-          <div className="text-center mt-20">
+          <div className="text-center mt-16">
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-velvet-600 to-neon-violet flex items-center justify-center animate-pulse-neon">
               <Bot className="w-10 h-10 text-white" />
             </div>
@@ -151,7 +125,7 @@ export function CustomerChatPage() {
           <div
             key={msg.id}
             className={cn(
-              'flex gap-3 max-w-3xl',
+              'flex gap-3 max-w-3xl mx-auto',
               msg.role === 'customer' ? 'ml-auto flex-row-reverse' : ''
             )}
           >

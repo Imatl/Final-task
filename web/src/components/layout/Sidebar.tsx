@@ -1,7 +1,6 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
-  MessageSquare,
   LayoutDashboard,
   BarChart3,
   Headphones,
@@ -10,6 +9,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/i18n';
@@ -24,9 +24,8 @@ export function Sidebar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { to: '/chat', label: t('nav.chat'), icon: MessageSquare },
-    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { to: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
+    { to: '/agent/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { to: '/agent/analytics', label: t('nav.analytics'), icon: BarChart3 },
   ];
 
   useEffect(() => {
@@ -60,14 +59,26 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {!sidebarCollapsed && (
-          <div className="pb-2">
+        <Link
+          to="/chat"
+          className={cn(
+            'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200',
+            'text-neon-cyan hover:bg-cosmic-700/50 hover:text-neon-cyan',
+            sidebarCollapsed && 'justify-center px-2'
+          )}
+        >
+          <MessageSquare className="w-5 h-5 flex-shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">{t('nav.chat')}</span>}
+        </Link>
+
+        <div className="pt-3 pb-2">
+          {!sidebarCollapsed && (
             <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              {t('sidebar.main')}
+              {t('sidebar.management')}
             </span>
-          </div>
-        )}
-        {sidebarCollapsed && <div className="border-t border-cosmic-700/50 mx-2 mb-2" />}
+          )}
+          {sidebarCollapsed && <div className="border-t border-cosmic-700/50 mx-2" />}
+        </div>
 
         {navItems.map((item) => (
           <NavLink
@@ -104,8 +115,8 @@ export function Sidebar() {
           </div>
           {!sidebarCollapsed && (
             <div className="flex flex-col items-start min-w-0">
-              <p className="text-sm font-medium text-white text-left truncate w-full">Demo User</p>
-              <p className="text-xs text-gray-400 text-left truncate w-full">support agent</p>
+              <p className="text-sm font-medium text-white text-left truncate w-full">Agent</p>
+              <p className="text-xs text-gray-400 text-left truncate w-full">support team</p>
             </div>
           )}
         </button>
@@ -117,7 +128,7 @@ export function Sidebar() {
           )}>
             <button
               onClick={() => {
-                navigate('/settings');
+                navigate('/agent/settings');
                 setIsUserMenuOpen(false);
               }}
               className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-cosmic-700 hover:text-white transition-colors"
