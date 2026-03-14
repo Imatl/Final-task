@@ -8,6 +8,8 @@ import { AmbientTwinkle } from '@/components/effects';
 export function RegisterPage() {
   const { t } = useTranslation();
 
+  const [fullName, setFullName] = useState('');
+  const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -79,6 +81,44 @@ export function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  {t('auth.fullName')}
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  autoComplete="name"
+                  placeholder={t('auth.fullNamePlaceholder')}
+                  className={cn(
+                    'w-full bg-cosmic-800/80 border border-cosmic-700/80 text-white rounded-xl px-4 py-2.5 text-sm',
+                    'placeholder-gray-600 transition-all duration-200',
+                    'focus:outline-none focus:border-neon-violet/50 focus:ring-2 focus:ring-neon-violet/10'
+                  )}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  {t('auth.company')}
+                </label>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  required
+                  autoComplete="organization"
+                  placeholder={t('auth.companyPlaceholder')}
+                  className={cn(
+                    'w-full bg-cosmic-800/80 border border-cosmic-700/80 text-white rounded-xl px-4 py-2.5 text-sm',
+                    'placeholder-gray-600 transition-all duration-200',
+                    'focus:outline-none focus:border-neon-violet/50 focus:ring-2 focus:ring-neon-violet/10'
+                  )}
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5">
                   {t('auth.email')}

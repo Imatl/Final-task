@@ -57,6 +57,7 @@ function saveUser(user: AuthUser | null) {
 interface AuthState {
   user: AuthUser | null;
   login: (email: string, password: string) => boolean;
+  loginWithGoogle: (googleUser: { email: string; name: string; sub: string }) => void;
   logout: () => void;
 }
 
@@ -73,6 +74,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       return true;
     }
     return false;
+  },
+  loginWithGoogle: (googleUser) => {
+    const existing = HARDCODED_USERS.find((u) => u.email === googleUser.email);
+    const user: AuthUser = existing
+      ? { id: existing.id, email: existing.email, name: existing.name, level: existing.level, role: existing.role }
+      : { id: `google-${googleUser.sub}`, email: googleUser.email, name: googleUser.name, level: 1, role: ROLE_LABELS[1] };
+    saveUser(user);
+    set({ user });
   },
   logout: () => {
     saveUser(null);
