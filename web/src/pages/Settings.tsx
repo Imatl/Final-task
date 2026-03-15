@@ -97,7 +97,13 @@ export function SettingsPage() {
   });
 
   const stats = metricsData?.stats as Record<string, unknown> | undefined;
-  const byProvider = stats?.by_provider as Record<string, { calls: number; avg_ms: number; min_ms: number; max_ms: number; total_tokens: number; errors: number }> | undefined;
+  const byProvider = stats?.by_provider as Record<string, { calls: number; avg_ms: number; min_ms: number; max_ms: number; total_tokens: number; cache_write_tokens: number; cache_read_tokens: number; errors: number }> | undefined;
+
+  const totalCacheRead = (stats?.total_cache_read as number) || 0;
+  const totalCacheWrite = (stats?.total_cache_write as number) || 0;
+  const totalTokensIn = (stats?.total_tokens_in as number) || 0;
+  const cacheHitRate = totalTokensIn + totalCacheRead > 0 ? Math.round((totalCacheRead / (totalTokensIn + totalCacheRead)) * 100) : 0;
+  const savingsPercent = totalTokensIn + totalCacheRead > 0 ? Math.round((totalCacheRead / (totalTokensIn + totalCacheRead)) * 90) : 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -163,6 +169,31 @@ export function SettingsPage() {
         </div>
       )}
 
+      {(totalCacheRead > 0 || totalCacheWrite > 0) && (
+        <div className="grid grid-cols-4 gap-4">
+          <Card variant="metric" className="p-5">
+            <span className="text-gray-500 text-xs">Cache Write</span>
+            <div className="text-2xl font-bold text-amber-400 font-mono mt-1">{totalCacheWrite.toLocaleString()}</div>
+            <span className="text-xs text-gray-600">tokens</span>
+          </Card>
+          <Card variant="metric" className="p-5">
+            <span className="text-gray-500 text-xs">Cache Read</span>
+            <div className="text-2xl font-bold text-neon-green font-mono mt-1">{totalCacheRead.toLocaleString()}</div>
+            <span className="text-xs text-gray-600">tokens</span>
+          </Card>
+          <Card variant="metric" className="p-5">
+            <span className="text-gray-500 text-xs">Cache Hit Rate</span>
+            <div className="text-2xl font-bold text-neon-cyan font-mono mt-1">{cacheHitRate}%</div>
+            <span className="text-xs text-gray-600">of input tokens</span>
+          </Card>
+          <Card variant="metric" className="p-5">
+            <span className="text-gray-500 text-xs">Cost Savings</span>
+            <div className="text-2xl font-bold text-neon-green font-mono mt-1">~{savingsPercent}%</div>
+            <span className="text-xs text-gray-600">cache reads at 90% discount</span>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <Card className="p-5">
           <h3 className="text-sm font-medium text-gray-300 mb-4 flex items-center gap-2">
@@ -201,6 +232,8 @@ export function SettingsPage() {
                   <th className="pb-2 pr-4">{t('settings.latency')}</th>
                   <th className="pb-2 pr-4">{t('settings.input')}</th>
                   <th className="pb-2 pr-4">{t('settings.output')}</th>
+                  <th className="pb-2 pr-4">Cache W</th>
+                  <th className="pb-2 pr-4">Cache R</th>
                   <th className="pb-2 pr-4">{t('settings.tools')}</th>
                   <th className="pb-2">{t('settings.errorCol')}</th>
                 </tr>
@@ -213,6 +246,8 @@ export function SettingsPage() {
                     <td className="py-2 pr-4 font-mono text-neon-violet">{m.latency_ms}ms</td>
                     <td className="py-2 pr-4 text-gray-400">{m.input_tokens}</td>
                     <td className="py-2 pr-4 text-gray-400">{m.output_tokens}</td>
+                    <td className="py-2 pr-4 text-amber-400 font-mono">{m.cache_write_tokens || '-'}</td>
+                    <td className="py-2 pr-4 text-neon-green font-mono">{m.cache_read_tokens || '-'}</td>
                     <td className="py-2 pr-4 text-gray-400">{m.tool_calls}</td>
                     <td className="py-2 text-red-400">{m.error || '-'}</td>
                   </tr>

@@ -21,7 +21,7 @@ function AgentRow({ agent }: { agent: AgentPerformance }) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">{agent.agent_name}</p>
-        <p className="text-xs text-gray-500 truncate">{agent.agent_id}</p>
+        <p className="text-xs text-gray-500 truncate">{agent.tickets_resolved} {t('staffPanel.resolved')}</p>
       </div>
 
       <div className="hidden sm:flex items-center gap-6 flex-shrink-0 text-xs text-gray-400">

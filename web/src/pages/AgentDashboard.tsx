@@ -67,7 +67,10 @@ function TicketRow({ ticket, isSelected, onSelect }: { ticket: Ticket; isSelecte
       <ChannelIcon className="w-4 h-4 text-gray-500" />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-gray-200 truncate">{ticket.subject}</div>
-        <div className="text-xs text-gray-500">{ticket.category} | {ageLabel} {t('dashboard.ago')}</div>
+        <div className="text-xs text-gray-500">
+          {ticket.category} | {ageLabel} {t('dashboard.ago')}
+          {ticket.agent_name && <span className="text-neon-cyan"> | {ticket.agent_name}</span>}
+        </div>
       </div>
       <Badge variant={PRIORITY_BADGE[ticket.priority] || 'default'}>{ticket.priority}</Badge>
       <Badge variant={ticket.status === 'open' ? 'error' : ticket.status === 'resolved' ? 'success' : 'default'} dot>{t(`dashboard.statuses.${ticket.status}`)}</Badge>

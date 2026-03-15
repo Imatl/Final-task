@@ -115,8 +115,10 @@ func (a *AnthropicProvider) Chat(ctx context.Context, req LLMRequest) (*LLMRespo
 
 	result := &LLMResponse{
 		Usage: TokenUsage{
-			InputTokens:  int(resp.Usage.InputTokens),
-			OutputTokens: int(resp.Usage.OutputTokens),
+			InputTokens:      int(resp.Usage.InputTokens),
+			OutputTokens:     int(resp.Usage.OutputTokens),
+			CacheWriteTokens: int(resp.Usage.CacheCreationInputTokens),
+			CacheReadTokens:  int(resp.Usage.CacheReadInputTokens),
 		},
 	}
 

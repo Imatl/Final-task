@@ -44,6 +44,7 @@ export interface Ticket {
   priority: string;
   category: string;
   agent_id?: string;
+  agent_name?: string;
   ai_summary?: string;
   created_at: string;
   updated_at: string;
@@ -120,6 +121,8 @@ export interface LLMMetrics {
   latency_ms: number;
   input_tokens: number;
   output_tokens: number;
+  cache_write_tokens: number;
+  cache_read_tokens: number;
   tool_calls: number;
   timestamp: string;
   error?: string;

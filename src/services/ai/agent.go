@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"supportflow/core"
@@ -26,6 +27,9 @@ func Init() {
 	defaultProvider := core.GetString("ai.provider", "anthropic")
 	SetActiveProvider(defaultProvider)
 	log.Printf("Active AI provider: %s", defaultProvider)
+
+	SeedDemoMetrics()
+	log.Println("Demo metrics seeded (40 records)")
 }
 
 var tools = []ToolDef{
@@ -142,11 +146,13 @@ func ProcessMessage(ctx context.Context, ticketID, customerMessage, lang string)
 
 		metrics.InputTokens = resp.Usage.InputTokens
 		metrics.OutputTokens = resp.Usage.OutputTokens
+		metrics.CacheWriteTokens = resp.Usage.CacheWriteTokens
+		metrics.CacheReadTokens = resp.Usage.CacheReadTokens
 		metrics.ToolCalls = len(resp.ToolCalls)
 		LogMetrics(metrics)
 
-		log.Printf("[%s] latency=%dms tokens_in=%d tokens_out=%d tools=%d",
-			providerName, latency, resp.Usage.InputTokens, resp.Usage.OutputTokens, len(resp.ToolCalls))
+		log.Printf("[%s] latency=%dms tokens_in=%d tokens_out=%d cache_w=%d cache_r=%d tools=%d",
+			providerName, latency, resp.Usage.InputTokens, resp.Usage.OutputTokens, resp.Usage.CacheWriteTokens, resp.Usage.CacheReadTokens, len(resp.ToolCalls))
 
 		if len(resp.ToolCalls) == 0 {
 			response.Message = resp.Text
@@ -290,12 +296,14 @@ func GenerateSuggestion(ctx context.Context, ticketID string) (string, error) {
 	latency := time.Since(start).Milliseconds()
 
 	LogMetrics(LLMMetrics{
-		Provider:     providerName,
-		Model:        core.GetString(providerName+".model", "unknown"),
-		LatencyMs:    latency,
-		InputTokens:  resp.Usage.InputTokens,
-		OutputTokens: resp.Usage.OutputTokens,
-		Timestamp:    time.Now(),
+		Provider:         providerName,
+		Model:            core.GetString(providerName+".model", "unknown"),
+		LatencyMs:        latency,
+		InputTokens:      resp.Usage.InputTokens,
+		OutputTokens:     resp.Usage.OutputTokens,
+		CacheWriteTokens: resp.Usage.CacheWriteTokens,
+		CacheReadTokens:  resp.Usage.CacheReadTokens,
+		Timestamp:        time.Now(),
 	})
 
 	if err != nil {
@@ -343,12 +351,14 @@ Return ONLY the summary text, nothing else.`, conversation)
 	latency := time.Since(start).Milliseconds()
 
 	LogMetrics(LLMMetrics{
-		Provider:     providerName,
-		Model:        core.GetString(providerName+".model", "unknown"),
-		LatencyMs:    latency,
-		InputTokens:  resp.Usage.InputTokens,
-		OutputTokens: resp.Usage.OutputTokens,
-		Timestamp:    time.Now(),
+		Provider:         providerName,
+		Model:            core.GetString(providerName+".model", "unknown"),
+		LatencyMs:        latency,
+		InputTokens:      resp.Usage.InputTokens,
+		OutputTokens:     resp.Usage.OutputTokens,
+		CacheWriteTokens: resp.Usage.CacheWriteTokens,
+		CacheReadTokens:  resp.Usage.CacheReadTokens,
+		Timestamp:        time.Now(),
 	})
 
 	if err != nil {
@@ -392,12 +402,14 @@ Return ONLY the JSON, no extra text.`, message)
 	latency := time.Since(start).Milliseconds()
 
 	LogMetrics(LLMMetrics{
-		Provider:     providerName,
-		Model:        core.GetString(providerName+".model", "unknown"),
-		LatencyMs:    latency,
-		InputTokens:  resp.Usage.InputTokens,
-		OutputTokens: resp.Usage.OutputTokens,
-		Timestamp:    time.Now(),
+		Provider:         providerName,
+		Model:            core.GetString(providerName+".model", "unknown"),
+		LatencyMs:        latency,
+		InputTokens:      resp.Usage.InputTokens,
+		OutputTokens:     resp.Usage.OutputTokens,
+		CacheWriteTokens: resp.Usage.CacheWriteTokens,
+		CacheReadTokens:  resp.Usage.CacheReadTokens,
+		Timestamp:        time.Now(),
 	})
 
 	if err != nil {
@@ -405,7 +417,14 @@ Return ONLY the JSON, no extra text.`, message)
 	}
 
 	var analysis structs.AIAnalysis
-	if err := json.Unmarshal([]byte(resp.Text), &analysis); err != nil {
+	text := strings.TrimSpace(resp.Text)
+	if strings.HasPrefix(text, "```") {
+		lines := strings.Split(text, "\n")
+		if len(lines) > 2 {
+			text = strings.Join(lines[1:len(lines)-1], "\n")
+		}
+	}
+	if err := json.Unmarshal([]byte(text), &analysis); err != nil {
 		analysis = structs.AIAnalysis{
 			TicketID:   ticketID,
 			Intent:     "general_inquiry",

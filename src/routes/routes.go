@@ -9,6 +9,7 @@ import (
 	"supportflow/api/analytics"
 	"supportflow/api/auth"
 	"supportflow/api/chat"
+	"supportflow/api/companies"
 	apiIntegrations "supportflow/api/integrations"
 	"supportflow/api/knowledge"
 	"supportflow/api/settings"
@@ -43,6 +44,8 @@ func Register(r *mux.Router, ctx context.Context) {
 
 	api.HandleFunc("/analytics/overview", analytics.HandleOverview).Methods("GET")
 	api.HandleFunc("/analytics/agents", analytics.HandleAgentPerformance).Methods("GET")
+
+	api.HandleFunc("/companies", companies.HandleList).Methods("GET")
 
 	api.HandleFunc("/integrations", apiIntegrations.HandleList).Methods("GET")
 	api.HandleFunc("/integrations/connect", apiIntegrations.HandleConnect).Methods("POST")

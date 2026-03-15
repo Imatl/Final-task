@@ -110,8 +110,9 @@ func (o *OpenAIProvider) Chat(ctx context.Context, req LLMRequest) (*LLMResponse
 
 	result := &LLMResponse{
 		Usage: TokenUsage{
-			InputTokens:  int(resp.Usage.PromptTokens),
-			OutputTokens: int(resp.Usage.CompletionTokens),
+			InputTokens:    int(resp.Usage.PromptTokens),
+			OutputTokens:   int(resp.Usage.CompletionTokens),
+			CacheReadTokens: int(resp.Usage.PromptTokensDetails.CachedTokens),
 		},
 	}
 

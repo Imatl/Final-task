@@ -71,27 +71,27 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 	idx := 1
 
 	if f.Status != "" {
-		where = append(where, fmt.Sprintf("status = $%d", idx))
+		where = append(where, fmt.Sprintf("t.status = $%d", idx))
 		args = append(args, f.Status)
 		idx++
 	}
 	if f.Priority != "" {
-		where = append(where, fmt.Sprintf("priority = $%d", idx))
+		where = append(where, fmt.Sprintf("t.priority = $%d", idx))
 		args = append(args, f.Priority)
 		idx++
 	}
 	if f.AgentID != "" {
-		where = append(where, fmt.Sprintf("agent_id = $%d", idx))
+		where = append(where, fmt.Sprintf("t.agent_id = $%d", idx))
 		args = append(args, f.AgentID)
 		idx++
 	}
 	if f.Category != "" {
-		where = append(where, fmt.Sprintf("category = $%d", idx))
+		where = append(where, fmt.Sprintf("t.category = $%d", idx))
 		args = append(args, f.Category)
 		idx++
 	}
 	if f.Company != "" {
-		where = append(where, fmt.Sprintf("company = $%d", idx))
+		where = append(where, fmt.Sprintf("t.company = $%d", idx))
 		args = append(args, f.Company)
 		idx++
 	}
@@ -99,7 +99,7 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 	whereClause := strings.Join(where, " AND ")
 
 	var total int
-	err := Pool.QueryRow(ctx, "SELECT COUNT(*) FROM supportflow.tickets WHERE "+whereClause, args...).Scan(&total)
+	err := Pool.QueryRow(ctx, "SELECT COUNT(*) FROM supportflow.tickets t WHERE "+whereClause, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -111,8 +111,9 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 	offset := f.Offset
 
 	query := fmt.Sprintf(
-		`SELECT id, customer_id, subject, channel, status, priority, category, agent_id, ai_summary, company, created_at, updated_at, closed_at
-		 FROM supportflow.tickets WHERE %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`,
+		`SELECT t.id, t.customer_id, t.subject, t.channel, t.status, t.priority, t.category, t.agent_id, a.name, t.ai_summary, t.company, t.created_at, t.updated_at, t.closed_at
+		 FROM supportflow.tickets t LEFT JOIN supportflow.agents a ON a.id = t.agent_id
+		 WHERE %s ORDER BY t.created_at DESC LIMIT $%d OFFSET $%d`,
 		whereClause, idx, idx+1,
 	)
 	args = append(args, limit, offset)
@@ -126,7 +127,7 @@ func ListTickets(ctx context.Context, f structs.TicketFilter) ([]structs.Ticket,
 	var tickets []structs.Ticket
 	for rows.Next() {
 		var t structs.Ticket
-		if err := rows.Scan(&t.ID, &t.CustomerID, &t.Subject, &t.Channel, &t.Status, &t.Priority, &t.Category, &t.AgentID, &t.AISummary, &t.Company, &t.CreatedAt, &t.UpdatedAt, &t.ClosedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.CustomerID, &t.Subject, &t.Channel, &t.Status, &t.Priority, &t.Category, &t.AgentID, &t.AgentName, &t.AISummary, &t.Company, &t.CreatedAt, &t.UpdatedAt, &t.ClosedAt); err != nil {
 			return nil, 0, err
 		}
 		tickets = append(tickets, t)
